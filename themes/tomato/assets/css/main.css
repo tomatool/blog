@@ -735,5 +735,5 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .people-flow[data-step="3"] .reset-x { opacity: 1; }
 .people-flow[data-step="3"] .person { opacity: 0.3; }
 .people-flow[data-step="3"] :is(.win, .db-box) { stroke: var(--fail); stroke-dasharray: 5 4; }
-.post-shot { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r); margin: 1rem 0; }
+.prose img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r); margin: 1rem 0; }
 @media (prefers-reduced-motion: reduce) { :is(.browser-flow, .people-flow) .pk { display: none; } .browser-flow .pointer { transition: none; } .browser-flow .press { animation: none; } }

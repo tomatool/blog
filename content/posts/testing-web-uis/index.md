@@ -257,7 +257,7 @@ step fails, **whichever resource that step belongs to**, so a red `shop-db`
 assertion comes with the page that led to it. This is the one from that
 run, unedited apart from cropping:
 
-<img class="post-shot" src="failed-step.png" alt="The shopping list page showing 'Something went wrong' under the Add button" width="460" height="300" loading="lazy">
+![The shopping list page showing 'Something went wrong' under the Add button](failed-step.png)
 
 Screenshots land in `.tomato/runs/<run>/screenshots/` beside the run's logs,
 so CI keeps them with everything else. `tomato ui` shows each one on the step
