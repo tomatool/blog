@@ -1,6 +1,10 @@
 {{ define "main" }}
   <article class="post">
     <header class="post-header">
+      {{ $series := and .Parent (eq .Parent.Params.layout "series") }}
+      {{ if $series }}
+        <a class="crumb" href="{{ .Parent.RelPermalink }}">← {{ .Parent.Title }}</a>
+      {{ end }}
       {{ if .IsPage }}
         {{ if eq .Section "posts" }}
           <div class="post-meta">
@@ -26,7 +30,18 @@
     </div>
   </article>
 
-  {{ if eq .Section "posts" }}
+  {{ if and .Parent (eq .Parent.Params.layout "series") }}
+    {{ $parts := .Parent.Pages.ByWeight }}
+    <nav class="post-nav">
+      {{/* Pages.Next is the entry before this one in the list, Pages.Prev the one after. */}}
+      {{ with $parts.Next . }}<a class="prev" href="{{ .RelPermalink }}"><span>Previous</span>{{ .LinkTitle }}</a>{{ end }}
+      {{ with $parts.Prev . }}<a class="next" href="{{ .RelPermalink }}"><span>Next</span>{{ .LinkTitle }}</a>{{ end }}
+    </nav>
+    <nav class="series-parts">
+      <a href="{{ .Parent.RelPermalink }}">{{ .Parent.Title }}</a>
+      {{ range $parts }}<a href="{{ .RelPermalink }}"{{ if eq . $ }} aria-current="page"{{ end }}>{{ .LinkTitle }}</a>{{ end }}
+    </nav>
+  {{ else if eq .Section "posts" }}
     <nav class="post-nav">
       {{ with .PrevInSection }}<a class="prev" href="{{ .RelPermalink }}"><span>Newer</span>{{ .Title }}</a>{{ end }}
       {{ with .NextInSection }}<a class="next" href="{{ .RelPermalink }}"><span>Older</span>{{ .Title }}</a>{{ end }}

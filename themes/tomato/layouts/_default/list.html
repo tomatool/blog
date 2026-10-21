@@ -9,7 +9,8 @@
   {{ end }}
 
   {{ $pages := .Pages }}
-  {{ if .IsHome }}{{ $pages = where site.RegularPages "Section" "in" site.Params.mainSections }}{{ end }}
+  {{/* Direct children only: a series lists as its overview, not as each of its parts. */}}
+  {{ if .IsHome }}{{ with site.GetPage "/posts" }}{{ $pages = .Pages }}{{ end }}{{ end }}
   <ul class="post-list">
     {{ range $pages.ByDate.Reverse }}
       <li class="post-card">

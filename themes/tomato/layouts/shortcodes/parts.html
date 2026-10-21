@@ -1,0 +1,10 @@
+{{/* Cards for the child pages of a series overview: {{< parts >}} */}}
+<div class="parts">
+  {{ range .Page.Pages.ByWeight }}
+    <a class="part" href="{{ .RelPermalink }}">
+      <span class="part-name">{{ .LinkTitle }}</span>
+      {{ with .Params.tool }}<span class="part-tool">{{ . }}</span>{{ end }}
+      <span class="part-summary">{{ .Summary | plainify | truncate 110 }}</span>
+    </a>
+  {{ end }}
+</div>

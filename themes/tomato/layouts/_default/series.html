@@ -1,0 +1,29 @@
+{{/* The overview of a series: a post like any other, whose parts are its child pages. */}}
+{{ define "main" }}
+  <article class="post">
+    <header class="post-header">
+      <div class="post-meta">
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+        <span class="dot">·</span>
+        <span>{{ .ReadingTime }} min read</span>
+        <span class="dot">·</span>
+        <span>{{ len .Pages }} parts</span>
+      </div>
+      <h1>{{ .Title }}</h1>
+      {{ with .Params.tags }}<div class="tags">{{ range . }}<span class="tag">{{ . }}</span>{{ end }}</div>{{ end }}
+    </header>
+
+    <details class="toc" open>
+      <summary>Contents</summary>
+      {{ .TableOfContents }}
+      <div class="toc-parts">
+        <span>Per language</span>
+        {{ range .Pages.ByWeight }}<a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ end }}
+      </div>
+    </details>
+
+    <div class="prose">
+      {{ .Content }}
+    </div>
+  </article>
+{{ end }}
