@@ -39,20 +39,11 @@ retry, the consumer path that no scenario ever drives the service into.
 
 ## The approach
 
-The coverage tool lives in the service's process, not in the test:
+tomato probes the service from outside; the coverage tool sits inside the
+service's process and keeps count. Step through a run of the demo's Go
+service, orders:
 
-```text
-build       │ the artifact, instrumented or run under an agent
-            ▼
-tomato run  │ starts the containers, then the app, with tomato's environment
-            │   + COVERAGE_SETTING=/where/to/write      ← the only addition
-            ▼
-scenarios   │ HTTP, gRPC, Kafka, RabbitMQ… exercise the running service
-            ▼
-SIGTERM     │ tomato stops the app; it exits, and its runtime writes the data
-            ▼
-report      │ the language's tool turns the data into lcov, HTML, a number
-```
+{{< coverage-flow >}}
 
 Two facts about tomato make this work without touching `tomato.yml`:
 
@@ -114,6 +105,14 @@ falls below that service's floor:
 A floor below the current number, rather than a target, is deliberate: it
 stops coverage from quietly shrinking when a scenario is deleted, without
 making anyone write scenarios to chase a percentage.
+
+## What the number tells you
+
+A report marks every line that ran. Here is a handler from the demo, the way
+to read it, and the one kind of line coverage cannot tell apart from a tested
+one:
+
+{{< coverage-meaning >}}
 
 ## What it covers
 

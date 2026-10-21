@@ -1,0 +1,69 @@
+{{/* An annotated report: what each kind of line in a coverage report means. */}}
+<figure class="explainer meaning">
+  <div class="meaning-head">
+    <div>
+      <div class="meaning-file">orders/api.go · <code>createOrder</code></div>
+      <div class="meaning-score"><strong>12 of 13</strong> lines ran · <strong>92%</strong></div>
+    </div>
+    <div class="meaning-bar" aria-hidden="true">
+      <span class="seg ran" style="flex: 11"></span><span class="seg blind" style="flex: 1"></span><span class="seg gap" style="flex: 1"></span>
+    </div>
+  </div>
+
+  <div class="meaning-code" role="table" aria-label="The handler, line by line, with what the coverage report says about each line">
+    {{ $lines := slice
+      (dict "n" 1 "k" "" "code" `<span class="kw">func</span> <span class="fn">createOrder</span>(w, r) {`)
+      (dict "n" 2 "k" "ran" "code" `  req, err := decode(r.Body)`)
+      (dict "n" 3 "k" "ran" "code" `  <span class="kw">if</span> err != <span class="kw">nil</span> {`)
+      (dict "n" 4 "k" "ran" "code" `    <span class="kw">return</span> reply(w, <span class="num">400</span>, <span class="str">"bad body"</span>)` "note" "malformed body")
+      (dict "n" 5 "k" "" "code" `  }`)
+      (dict "n" 6 "k" "ran" "code" `  p, err := catalog.GetProduct(req.SKU)`)
+      (dict "n" 7 "k" "ran" "code" `  <span class="kw">if</span> status.Code(err) == codes.NotFound {`)
+      (dict "n" 8 "k" "ran" "code" `    <span class="kw">return</span> reply(w, <span class="num">422</span>, <span class="str">"unknown product"</span>)` "note" "unknown product")
+      (dict "n" 9 "k" "" "code" `  }`)
+      (dict "n" 10 "k" "ran" "code" `  <span class="kw">if</span> err != <span class="kw">nil</span> {`)
+      (dict "n" 11 "k" "ran" "code" `    <span class="kw">return</span> reply(w, <span class="num">503</span>, <span class="str">"catalog is down"</span>)` "note" "catalog refuses connections")
+      (dict "n" 12 "k" "" "code" `  }`)
+      (dict "n" 13 "k" "ran" "code" `  order := newOrder(req, p)`)
+      (dict "n" 14 "k" "ran" "code" `  <span class="kw">if</span> err := db.Insert(order); err != <span class="kw">nil</span> {`)
+      (dict "n" 15 "k" "gap" "code" `    <span class="kw">return</span> reply(w, <span class="num">500</span>, <span class="str">"could not store"</span>)` "note" "No scenario makes the database fail. A missing scenario: stop Postgres with tomato's lifecycle resource.")
+      (dict "n" 16 "k" "" "code" `  }`)
+      (dict "n" 17 "k" "blind" "code" `  events.Publish(<span class="str">"orders.created"</span>, order)` "note" "Ran, so it counts as covered. But no step checks the event: drop this line and every scenario still passes.")
+      (dict "n" 18 "k" "ran" "code" `  <span class="kw">return</span> reply(w, <span class="num">201</span>, order)` "note" "an order is placed")
+      (dict "n" 19 "k" "" "code" `}`)
+    }}
+    {{ range $lines }}
+      <div class="mline {{ .k }}" role="row">
+        <span class="mgut" role="cell">{{ .n }}</span>
+        <span class="mmark" role="cell" aria-label="{{ with .k }}{{ if eq . "ran" }}ran{{ else if eq . "gap" }}never ran{{ else }}ran, not checked{{ end }}{{ end }}">{{ with .k }}{{ if eq . "ran" }}✓{{ else if eq . "gap" }}✗{{ else }}!{{ end }}{{ end }}</span>
+        {{/* Indent with CSS: the HTML minifier collapses leading spaces. */}}
+        {{ $text := strings.TrimLeft " " .code }}
+        <span class="mcode" role="cell" style="--ind: {{ sub (len .code) (len $text) }}">{{ $text | safeHTML }}</span>
+        {{ with .note }}<span class="mnote" role="cell">{{ . }}</span>{{ end }}
+      </div>
+    {{ end }}
+  </div>
+
+  <div class="meaning-legend">
+    <div class="leg ran">
+      <span class="leg-mark">✓</span>
+      <div><strong>Ran</strong><p>A scenario drove the service through this line. The note says which one.</p></div>
+    </div>
+    <div class="leg gap">
+      <span class="leg-mark">✗</span>
+      <div><strong>Never ran: a gap</strong><p>Behaviour no scenario provokes. This is what the report is for: each red line is a scenario to write, or code to delete.</p></div>
+    </div>
+    <div class="leg blind">
+      <span class="leg-mark">!</span>
+      <div><strong>Ran, but nothing checked it</strong><p>Coverage cannot see this: a line counts the moment it runs. Only assertions on effects (the row, the message, the call) turn "ran" into "tested".</p></div>
+    </div>
+  </div>
+
+  <div class="meaning-outside">
+    <span class="outside-label">Never in the number</span>
+    <span class="chip-x">the stubs tomato serves</span>
+    <span class="chip-x">Postgres, Kafka & the other containers</span>
+    <span class="chip-x">other services</span>
+    <span class="chip-x">generated & vendored code</span>
+  </div>
+</figure>

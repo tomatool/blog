@@ -11,7 +11,7 @@
       {{ $current := . }}
       {{ range site.Menus.main }}
         {{ $active := and .Page ($current.IsDescendant .Page) }}
-        <a href="{{ .URL }}"{{ if $active }} aria-current="page"{{ end }}{{ if hasPrefix .URL "http" }} rel="noopener"{{ end }}>{{ .Name }}</a>
+        <a href="{{ .URL }}"{{ if $active }} aria-current="page"{{ end }}{{ if hasPrefix .URL "http" }} class="external" rel="noopener"{{ end }}>{{ .Name }}</a>
       {{ end }}
       <button class="theme-toggle" type="button" aria-label="Switch between dark and light">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
