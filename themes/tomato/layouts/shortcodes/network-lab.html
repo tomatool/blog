@@ -1,0 +1,202 @@
+{{/* A simulator of the network resource: pick a fault and watch what
+     happens to the app's requests on their way to Postgres and back. */}}
+{{ $id := printf "netlab-%d" .Ordinal }}
+<figure class="explainer flow netlab" id="{{ $id }}" data-fault="healthy">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 320" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">The app's requests to Postgres pass through tomato's proxy, which can delay, swallow, reset, refuse or drop them; tomato's own database resource connects to Postgres directly.</title>
+
+    <!-- the app -->
+    <rect class="box app" x="20" y="34" width="176" height="196" rx="10" />
+    <text class="title" x="36" y="60">your app</text>
+    <text class="muted" x="36" y="77">orders · node app.js</text>
+    <text class="muted" x="36" y="112">last request</text>
+    <text class="readout" x="36" y="132" data-f="result">201 in 4 ms</text>
+    <text class="muted" x="36" y="166">connections opened</text>
+    <text class="readout plain" x="36" y="186" data-f="conns">1</text>
+    <text class="muted small" x="36" y="216">DATABASE_URL → the proxy</text>
+
+    <!-- the proxy -->
+    <rect class="box proxy" x="300" y="34" width="180" height="196" rx="10" />
+    <text class="title" x="316" y="60">postgres-network</text>
+    <text class="muted" x="316" y="77">tomato's proxy</text>
+    <text class="fault-name" x="390" y="140" text-anchor="middle" data-f="fault">healthy</text>
+    <text class="fault-sub" x="390" y="160" text-anchor="middle" data-f="faultSub">passes everything</text>
+
+    <!-- postgres -->
+    <rect class="box db" x="586" y="34" width="174" height="196" rx="10" />
+    <text class="title" x="602" y="60">postgres</text>
+    <text class="muted" x="602" y="77">container</text>
+    <text class="muted" x="602" y="112">state</text>
+    <text class="readout ok" x="602" y="132">running</text>
+    <text class="muted" x="602" y="166">rows in orders</text>
+    <text class="readout plain" x="602" y="186" data-f="rows">0</text>
+
+    <!-- lanes -->
+    <text class="lane-label" x="243" y="98" text-anchor="middle">query →</text>
+    <text class="lane-label" x="243" y="198" text-anchor="middle">← reply</text>
+    <path class="lane" d="M196 110 H586" />
+    <path class="lane" d="M586 180 H196" />
+    <g class="packets-layer"></g>
+
+    <!-- tomato's own resource -->
+    <path class="bypass" d="M108 230 V286 H673 V230" />
+    <rect class="bypass-tag" x="236" y="274" width="312" height="24" rx="12" />
+    <text class="bypass-text" x="392" y="290" text-anchor="middle">"orders-db" (tomato) connects directly</text>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="providers faults" role="tablist">
+      <button type="button" data-k="healthy">healthy</button>
+      <button type="button" data-k="latency">latency</button>
+      <button type="button" data-k="bandwidth">bandwidth</button>
+      <button type="button" data-k="hang">stops responding</button>
+      <button type="button" data-k="reset">resets</button>
+      <button type="button" data-k="refuse">refuses</button>
+      <button type="button" data-k="flap">flaps</button>
+      <button type="button" data-k="failnext">fails the next 2</button>
+      <button type="button" data-k="loss">loses data</button>
+    </div>
+    <div class="flow-text netlab-text" aria-live="polite">
+      <p data-for="healthy"><code>"postgres-network" is healthy</code>: queries and replies pass untouched. Every scenario starts here: tomato heals the network and forgets its counts before each one.</p>
+      <p data-for="latency"><code>adds latency "300ms" with jitter "100ms"</code>: every reply arrives late, on the connections already open too. Does the endpoint still meet its budget? Does a cache keep it fast?</p>
+      <p data-for="bandwidth"><code>limits bandwidth to "64KB/s"</code>: replies trickle in, as over a congested link. Large result sets and file downloads show it first.</p>
+      <p data-for="hang"><code>stops responding</code>: queries still <em>reach</em> Postgres and run, but no reply comes back. Without a timeout the app waits forever, and so does its caller. With one, it answers 503, though the row may be written already.</p>
+      <p data-for="reset"><code>resets connections for "2s"</code>: every connection is cut (TCP RST) the moment it carries data, as in a crash or a failover. The pool's connection dies; does the app open a new one and try again?</p>
+      <p data-for="refuse"><code>refuses connections</code>: open connections close and new ones are refused, as when the database is down. The container keeps running and keeps its data, so the scenario can check it.</p>
+      <p data-for="flap"><code>flaps every "2s" for "10s"</code>: down, up, down, up, like a database restarting in a loop. Retries that give up too soon, or never back off, show here.</p>
+      <p data-for="failnext"><code>fails the next "2" connections</code>: two new connections close as soon as they open, then everything passes, like a dependency coming back up. <code>has seen "3" connections</code> proves the app retried.</p>
+      <p data-for="loss"><code>loses "30%" of the data</code>: chunks of the replies vanish, so the client stalls or reads a garbled protocol. Not TCP packet loss, which TCP would repair.</p>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var NS = "http://www.w3.org/2000/svg";
+  var layer = root.querySelector(".packets-layer");
+  var f = function (k) { return root.querySelector('[data-f="' + k + '"]'); };
+  var FAULTS = {
+    healthy: ["healthy", "passes everything"],
+    latency: ["+300ms ± 100ms", "every reply, late"],
+    bandwidth: ["64 KB/s", "replies trickle"],
+    hang: ["stops responding", "queries in, nothing out"],
+    reset: ["resets", "RST on first byte"],
+    refuse: ["refuses", "nothing gets in"],
+    flap: ["flaps", "down 2s, up 2s"],
+    failnext: ["fails the next 2", "then passes"],
+    loss: ["loses 30%", "chunks of replies dropped"]
+  };
+  var ORDER = ["healthy", "latency", "hang", "reset", "refuse", "flap", "failnext", "loss", "bandwidth"];
+  var X_APP = 196, X_IN = 300, X_OUT = 480, X_DB = 586, Y_Q = 110, Y_R = 180, SPEED = 0.32; // px per ms
+  var fault = "healthy", packets = [], spawnAt = 0, t0 = 0, conns = 1, rows = 0, failLeft = 0, n = 0;
+
+  function dot(cls) {
+    var c = document.createElementNS(NS, "circle");
+    c.setAttribute("r", 6); c.setAttribute("class", "pk-dot " + cls);
+    layer.appendChild(c); return c;
+  }
+  function mark(text, x, y, cls) {
+    var t = document.createElementNS(NS, "text");
+    t.setAttribute("x", x); t.setAttribute("y", y); t.setAttribute("text-anchor", "middle");
+    t.setAttribute("class", "pk-mark " + cls); t.textContent = text;
+    layer.appendChild(t); setTimeout(function () { t.remove(); }, 900);
+  }
+  function result(text, cls) { var r = f("result"); r.textContent = text; r.setAttribute("class", "readout " + (cls || "")); }
+  function down(now) { return fault === "refuse" || (fault === "flap" && Math.floor((now - t0) / 2000) % 2 === 0); }
+
+  function spawn(now) {
+    n++;
+    if (fault === "flap") f("faultSub").textContent = down(now) ? "down for 2s" : "up for 2s";
+    if (down(now)) {
+      var b = { el: dot("q bad"), x: X_APP, y: Y_Q, dir: 1, stage: "bounce", born: now };
+      packets.push(b); return;
+    }
+    var p = { el: dot("q"), x: X_APP, y: Y_Q, dir: 1, stage: "query", born: now };
+    if (fault === "reset" || (fault === "failnext" && failLeft > 0)) { p.doom = true; conns++; if (fault === "failnext") failLeft--; }
+    packets.push(p);
+  }
+
+  function step(p, now, dt) {
+    var v = SPEED * dt;
+    if (p.stage === "bounce") {
+      if (p.dir === 1) { p.x += v; if (p.x >= X_IN - 6) { p.dir = -1; mark("refused", X_IN - 18, Y_Q - 14, "bad"); } }
+      else { p.x -= v; if (p.x <= X_APP) { result("ECONNREFUSED → retry", "bad"); return false; } }
+    } else if (p.stage === "query") {
+      p.x += v;
+      if (p.doom && p.x >= X_IN + 10) {
+        mark("✕ RST", X_IN + 30, Y_Q - 14, "bad");
+        result(fault === "failnext" ? "conn closed → retry" : "ECONNRESET → retry", "bad");
+        f("conns").textContent = conns; return false;
+      }
+      if (p.x >= X_DB) { p.stage = "reply"; p.x = X_DB; p.y = Y_R; p.el.setAttribute("class", "pk-dot r"); rows++; f("rows").textContent = rows; }
+    } else if (p.stage === "reply") {
+      var inProxy = p.x <= X_OUT && p.x >= X_IN;
+      if (fault === "hang" && p.x <= X_OUT + 4) {
+        p.x = X_OUT + 4; p.el.setAttribute("class", "pk-dot r held");
+        if (!p.timedOut && now - p.born > 2600) { p.timedOut = true; result("timed out → 503", "bad"); mark("swallowed", X_OUT - 30, Y_R + 24, "bad"); }
+        if (now - p.born > 3400) return false;
+        p.el.setAttribute("cx", p.x); p.el.setAttribute("cy", p.y);
+        return true;
+      }
+      if (fault === "latency" && inProxy && !p.waited) { p.waitUntil = now + 450 + Math.random() * 300; p.waited = true; p.el.setAttribute("class", "pk-dot r slow"); }
+      if (p.waitUntil && now < p.waitUntil) return true;
+      if (fault === "loss" && inProxy && p.lost === undefined) p.lost = Math.random() < 0.35;
+      if (p.lost) { p.y += v * 0.8; p.el.style.opacity = Math.max(0, 1 - (p.y - Y_R) / 40); if (p.y > Y_R + 40) { result("reply garbled → error", "bad"); return false; } return true; }
+      p.x -= fault === "bandwidth" && inProxy ? v * 0.18 : v;
+      if (p.x <= X_APP) {
+        var shown = fault === "latency" ? 300 + Math.round(Math.random() * 200 - 100) : fault === "bandwidth" ? 900 + (n % 5) * 40 : 4 + (n % 3);
+        result("201 in " + shown + " ms", fault === "latency" || fault === "bandwidth" ? "slow" : "");
+        return false;
+      }
+    }
+    p.el.setAttribute("cx", p.x); p.el.setAttribute("cy", p.y);
+    return true;
+  }
+
+  var last = 0, raf = null;
+  function frame(now) {
+    var dt = last ? Math.min(50, now - last) : 16; last = now;
+    if (now >= spawnAt) { spawn(now); spawnAt = now + (fault === "hang" ? 1400 : 950); }
+    packets = packets.filter(function (p) { var keep = step(p, now, dt); if (!keep) p.el.remove(); return keep; });
+    raf = requestAnimationFrame(frame);
+  }
+  function run() { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } }
+  function pause() { if (raf) cancelAnimationFrame(raf); raf = null; }
+
+  function pick(k) {
+    fault = k; t0 = performance.now(); spawnAt = 0;
+    packets.forEach(function (p) { p.el.remove(); }); packets = [];
+    if (k === "failnext") failLeft = 2;
+    if (k === "healthy") { conns = 1; rows = 0; f("conns").textContent = conns; f("rows").textContent = rows; }
+    root.dataset.fault = k;
+    f("fault").textContent = FAULTS[k][0]; f("faultSub").textContent = FAULTS[k][1];
+    result(k === "hang" ? "waiting…" : "—", k === "hang" ? "slow" : "");
+    root.querySelectorAll("[data-k]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.k === k); });
+    root.querySelectorAll(".netlab-text [data-for]").forEach(function (p) { p.hidden = p.dataset.for !== k; });
+  }
+
+  var touched = false, cycle = null;
+  function autoplay() {
+    if (cycle || touched) return;
+    cycle = setInterval(function () { pick(ORDER[(ORDER.indexOf(fault) + 1) % ORDER.length]); }, 6000);
+  }
+  function stopCycle() { clearInterval(cycle); cycle = null; }
+  root.querySelectorAll("[data-k]").forEach(function (b) {
+    b.addEventListener("click", function () { touched = true; stopCycle(); pick(b.dataset.k); run(); });
+  });
+
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var m = location.search.match(/fault=(\w+)/);
+  pick(m && FAULTS[m[1]] ? m[1] : "healthy");
+  if (calm) { touched = true; run(); return; }
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { run(); if (!m) autoplay(); } else { pause(); stopCycle(); }
+      });
+    }, { threshold: 0.4 }).observe(root.querySelector("svg"));
+  } else run();
+})();
+</script>

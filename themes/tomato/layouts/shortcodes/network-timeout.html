@@ -1,0 +1,116 @@
+{{/* The hung database, as a sequence: the app times out after Postgres has
+     committed, and only an idempotent retry ends well. */}}
+{{ $id := printf "nettime-%d" .Ordinal }}
+<figure class="explainer flow nettime" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 360" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">With the network hung, the app's INSERT reaches Postgres and commits, but the reply is swallowed; the app times out and answers 503, while the order is stored. A retry with the same order id must not fail or store it twice.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- lanes -->
+    <g class="heads">
+      <rect class="box" x="40" y="14" width="140" height="34" rx="8" /><text class="title" x="110" y="36" text-anchor="middle">orders-client</text>
+      <rect class="box" x="230" y="14" width="120" height="34" rx="8" /><text class="title" x="290" y="36" text-anchor="middle">your app</text>
+      <rect class="box proxy-h" x="400" y="14" width="170" height="34" rx="8" /><text class="title" x="485" y="36" text-anchor="middle">postgres-network</text>
+      <rect class="box" x="620" y="14" width="130" height="34" rx="8" /><text class="title" x="685" y="36" text-anchor="middle">postgres</text>
+    </g>
+    <path class="life" d="M110 48 V346 M290 48 V346 M485 48 V346 M685 48 V346" />
+
+    <!-- 1 · the fault -->
+    <g class="s s0"><rect class="fault-band" x="400" y="62" width="170" height="22" rx="4" /><text class="fault-t" x="485" y="77" text-anchor="middle">stops responding</text></g>
+
+    <!-- 2 · the order goes in -->
+    <g class="s s1">
+      <path class="msg" d="M110 104 H286" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="198" y="98" text-anchor="middle">POST /orders  ord-1</text>
+      <path class="msg" d="M290 128 H681" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="388" y="122" text-anchor="middle">INSERT ord-1</text>
+      <rect class="commit" x="626" y="138" width="118" height="22" rx="4" /><text class="commit-t" x="685" y="153" text-anchor="middle">committed ✓</text>
+    </g>
+
+    <!-- 3 · the reply is swallowed, the app times out -->
+    <g class="s s2">
+      <path class="msg back lost" d="M685 172 H492" /><text class="lost-t" x="485" y="176" text-anchor="middle">✕</text>
+      <text class="msg-t dim" x="590" y="166" text-anchor="middle">INSERT 0 1</text>
+      <path class="wait" d="M296 136 V196" /><text class="wait-t" x="302" y="172">waits 1s</text>
+      <path class="msg back bad" d="M286 204 H114" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t bad" x="198" y="198" text-anchor="middle">503 try again</text>
+    </g>
+
+    <!-- 4 · the database says otherwise -->
+    <g class="s s3">
+      <path class="direct" d="M110 228 C 300 248, 560 248, 681 228" marker-end="url(#{{ $id }}-arrow)" />
+      <text class="direct-t" x="398" y="226" text-anchor="middle">"orders-db" table "orders" has "1" rows</text>
+      <text class="direct-sub" x="398" y="258" text-anchor="middle">tomato reads it past the proxy: the 503 was wrong, the order exists</text>
+    </g>
+
+    <!-- 5 · the retry -->
+    <g class="s s4">
+      <rect class="heal-band" x="400" y="270" width="170" height="20" rx="4" /><text class="heal-t" x="485" y="284" text-anchor="middle">is healthy</text>
+      <path class="msg" d="M110 306 H286" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="198" y="300" text-anchor="middle">retry: POST ord-1</text>
+      <path class="msg" d="M290 318 H681" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="560" y="312" text-anchor="middle">INSERT … ON CONFLICT DO NOTHING</text>
+      <path class="msg back good" d="M286 336 H114" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t good" x="198" y="350" text-anchor="middle">201 · still 1 row</text>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Hang</button>
+      <button type="button" data-go="1">2 · Insert</button>
+      <button type="button" data-go="2">3 · Time out</button>
+      <button type="button" data-go="3">4 · Check</button>
+      <button type="button" data-go="4">5 · Retry</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong><code>"postgres-network" stops responding</code></strong>. Connections stay open and queries still go through. Only the replies stop.</p>
+      <p data-for="1"><strong>The order goes in.</strong> The client posts <code>ord-1</code>, the app runs its INSERT, and Postgres commits it. Nothing about that was faulty.</p>
+      <p data-for="2"><strong>The reply never comes back.</strong> The app's query timeout fires after a second, and it answers <code>503 try again</code>. That's the right call: it doesn't know what happened.</p>
+      <p data-for="3"><strong>Postgres knows.</strong> tomato's <code>orders-db</code> connects to the container directly, past the proxy, and finds the order. A 503 doesn't mean nothing happened.</p>
+      <p data-for="4"><strong>So the client does what the 503 asked</strong> and tries again with the same order id. Because the insert ignores an id it already has, the retry gets <code>201</code> and there's still one row. Without that, every retry fails on the duplicate key, for an order that exists.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var LAST = 4, step = 0, timer = null;
+  function show(n) {
+    step = Math.max(0, Math.min(LAST, n));
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    root.querySelectorAll(".s").forEach(function (g, i) { g.classList.toggle("on", i <= step); g.classList.toggle("now", i === step); });
+  }
+  var touched = false;
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= LAST ? 0 : step);
+    timer = setInterval(function () { if (step >= LAST) stop(); else show(step + 1); }, 3800);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/timeout=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/timeout=(\d)/);
+  show(m ? +m[1] : 0);
+})();
+</script>

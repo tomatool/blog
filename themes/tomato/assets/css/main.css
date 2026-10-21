@@ -737,3 +737,62 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .people-flow[data-step="3"] :is(.win, .db-box) { stroke: var(--fail); stroke-dasharray: 5 4; }
 .prose img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r); margin: 1rem 0; }
 @media (prefers-reduced-motion: reduce) { :is(.browser-flow, .people-flow) .pk { display: none; } .browser-flow .pointer { transition: none; } .browser-flow .press { animation: none; } }
+
+/* the network fault lab (shortcode network-lab) */
+.netlab .readout { fill: var(--pass); font-size: 13px; font-weight: 600; }
+.netlab .readout.plain { fill: var(--fg-0); }
+.netlab .readout.bad { fill: var(--fail); }
+.netlab .readout.slow { fill: var(--warn); }
+.netlab .muted.small { font-size: 10.5px; }
+.netlab .lane { fill: none; stroke: var(--line-strong); stroke-width: 1.4; stroke-dasharray: 2 5; }
+.netlab .lane-label { fill: var(--fg-3); font-size: 11px; }
+.netlab .fault-name { fill: var(--fg-0); font-size: 15px; font-weight: 600; }
+.netlab .fault-sub { fill: var(--fg-3); font-size: 11px; }
+.netlab .proxy { transition: stroke 0.3s, fill 0.3s; }
+.netlab:not([data-fault="healthy"]) .proxy { stroke: var(--fail); fill: var(--fail-bg); }
+.netlab:is([data-fault="latency"], [data-fault="bandwidth"]) .proxy { stroke: var(--warn); fill: var(--warn-bg); }
+.netlab:not([data-fault="healthy"]) .fault-name { fill: var(--fail); }
+.netlab:is([data-fault="latency"], [data-fault="bandwidth"]) .fault-name { fill: var(--warn); }
+.netlab .pk-dot { fill: var(--when); }
+.netlab .pk-dot.r { fill: var(--pass); }
+.netlab .pk-dot.slow { fill: var(--warn); }
+.netlab .pk-dot.held { fill: var(--fail); opacity: 0.55; }
+.netlab .pk-dot.bad { fill: var(--fail); }
+.netlab .pk-mark { font-size: 11.5px; font-weight: 600; animation: pk-up 0.9s ease-out forwards; }
+.netlab .pk-mark.bad { fill: var(--fail); }
+@keyframes pk-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+.netlab .bypass { fill: none; stroke: var(--then); stroke-width: 1.6; stroke-dasharray: 6 4; animation: bypass 1.2s linear infinite; }
+@keyframes bypass { to { stroke-dashoffset: -20; } }
+.netlab .bypass-tag { fill: var(--bg-1); stroke: var(--then); }
+.netlab .bypass-text { fill: var(--then); font-size: 11.5px; }
+.netlab .faults { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) { .netlab .bypass, .netlab .pk-mark { animation: none; } }
+
+/* the timeout that lied (shortcode network-timeout) */
+.nettime .life { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 3 4; fill: none; }
+.nettime .proxy-h { stroke: var(--fail); }
+.nettime .s { opacity: 0; transition: opacity 0.45s; }
+.nettime .s.on { opacity: 0.45; }
+.nettime .s.now { opacity: 1; }
+.nettime .s0.on { opacity: 1; }
+.nettime .msg { fill: none; stroke: var(--when); stroke-width: 1.6; }
+.nettime .msg.back { stroke: var(--pass); }
+.nettime .msg.bad { stroke: var(--fail); }
+.nettime .msg.good { stroke: var(--pass); }
+.nettime .msg.lost { stroke: var(--fail); stroke-dasharray: 4 4; }
+.nettime .msg-t { fill: var(--fg-1); font-size: 11.5px; }
+.nettime .msg-t.dim { fill: var(--fg-3); }
+.nettime .msg-t.bad { fill: var(--fail); font-weight: 600; }
+.nettime .msg-t.good { fill: var(--pass); font-weight: 600; }
+.nettime .lost-t { fill: var(--fail); font-size: 15px; font-weight: 700; }
+.nettime .fault-band { fill: var(--fail-bg); stroke: var(--fail); }
+.nettime .fault-t { fill: var(--fail); font-size: 11.5px; font-weight: 600; }
+.nettime .heal-band { fill: var(--pass-bg); stroke: var(--pass); }
+.nettime .heal-t { fill: var(--pass); font-size: 11px; font-weight: 600; }
+.nettime .commit { fill: var(--pass-bg); stroke: var(--pass); }
+.nettime .commit-t { fill: var(--pass); font-size: 11.5px; font-weight: 600; }
+.nettime .wait { stroke: var(--warn); stroke-width: 3; }
+.nettime .wait-t { fill: var(--warn); font-size: 11px; }
+.nettime .direct { fill: none; stroke: var(--then); stroke-width: 1.6; stroke-dasharray: 6 4; }
+.nettime .direct-t { fill: var(--then); font-size: 11.5px; font-weight: 600; }
+.nettime .direct-sub { fill: var(--fg-2); font-size: 11px; }
