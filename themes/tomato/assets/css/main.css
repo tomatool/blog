@@ -297,7 +297,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .part-tool { font-family: var(--font-mono); font-size: 12px; color: var(--given); }
 .part-summary { font-size: 13.5px; line-height: 1.5; color: var(--fg-2); }
 
-/* ─── explainers (shortcodes coverage-flow, coverage-meaning) ───────────── */
+/* ─── explainers (shortcodes coverage-flow, coverage-meaning, storage-flow) ─ */
 
 .explainer {
   margin: 28px 0; padding: 18px; border: 1px solid var(--line); border-radius: 12px;
@@ -366,6 +366,33 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .explainer .ghost:hover { border-color: var(--line-strong); color: var(--fg-0); }
 .flow .play { color: var(--fail); }
+
+/* the object storage flow (shortcode storage-flow) */
+.storage-flow .env-val { fill: var(--arg); font-size: 11.5px; }
+.storage-flow .env-val.endpoint { font-size: 10.5px; }
+.storage-flow .obj-box { fill: var(--pass-bg); stroke: var(--pass); }
+.storage-flow .obj-text { fill: var(--pass); font-size: 11px; }
+.storage-flow .reset-text { fill: var(--fail); font-size: 11.5px; }
+.storage-flow .packet.check { fill: var(--then); }
+.storage-flow :is(.s-tomato, .s-http, .s-check, .object, .reset-text) { opacity: 0.12; transition: opacity 0.4s; }
+.storage-flow .env-val, .storage-flow .store-box { transition: fill 0.3s, stroke 0.3s; }
+.storage-flow:not([data-step="0"]) .store-box { stroke: var(--given); fill: color-mix(in oklch, var(--given) 10%, var(--bg-2)); }
+.storage-flow:not([data-step="0"]) .s-tomato { opacity: 1; }
+.storage-flow[data-step="0"] .s-store .title { fill: var(--fail); }
+.storage-flow[data-step="2"] :is(.s-http, .s-check, .object) { opacity: 1; }
+.storage-flow[data-step="2"] .packets { opacity: 1; }
+.storage-flow[data-step="2"] .wire { stroke: var(--when); }
+.storage-flow[data-step="2"] .wire.s-check { stroke: var(--then); }
+.storage-flow[data-step="3"] .reset-text { opacity: 1; }
+.storage-flow[data-step="3"] .object { opacity: 0.25; }
+.storage-flow[data-step="3"] .obj-box { stroke-dasharray: 4 3; stroke: var(--fail); fill: var(--fail-bg); }
+.providers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.providers[hidden] { display: none; }
+.providers button {
+  font-family: var(--font-mono); font-size: 12px; color: var(--fg-2);
+  padding: 3px 9px; border-radius: 6px; border: 1px dashed var(--line-strong); background: transparent;
+}
+.providers button[aria-pressed="true"] { color: var(--arg); border-style: solid; border-color: var(--arg); }
 
 /* the annotated report */
 .meaning-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }

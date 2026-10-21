@@ -1,0 +1,152 @@
+{{/* A step-through diagram of one service, many object stores: production
+     points it at a provider, a tomato run points it at a MinIO container. */}}
+{{ $id := printf "storage-%d" .Ordinal }}
+<figure class="explainer flow storage-flow" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 360" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">The same service code talks the S3 API to whichever object store its environment names: a cloud provider in production, a MinIO container in a tomato run, where tomato reads the bucket to check what the service wrote.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- tomato -->
+    <g class="part s-tomato">
+      <rect class="box" x="20" y="40" width="170" height="200" rx="10" />
+      <circle class="fruit" cx="42" cy="64" r="7" /><rect class="stem" x="39" y="53" width="6" height="5" rx="1.5" />
+      <text class="title" x="56" y="69">tomato run</text>
+      <text class="sc-text" x="36" y="104">POST /invoices</text>
+      <text class="sc-text" x="36" y="128">object should exist</text>
+      <text class="sc-text" x="36" y="152">content should match</text>
+      <text class="muted" x="36" y="222">features/*.feature</text>
+    </g>
+
+    <!-- the service -->
+    <g class="part s-app">
+      <rect class="box" x="250" y="40" width="270" height="200" rx="10" />
+      <text class="title" x="266" y="69">invoices</text>
+      <text class="muted" x="336" y="69">your service</text>
+      <text class="badge-text" x="266" y="96">s3.PutObject(…)  same code</text>
+      <rect class="env-box" x="262" y="112" width="246" height="112" rx="6" />
+      <text class="env-text" x="274" y="134">STORAGE_ENDPOINT=</text>
+      <text class="env-val endpoint" x="274" y="152" data-field="endpoint">s3.eu-central-1.amazonaws.com</text>
+      <text class="env-text" x="274" y="176">STORAGE_REGION=<tspan class="env-val" data-field="region">eu-central-1</tspan></text>
+      <text class="env-text" x="274" y="198">STORAGE_PATH_STYLE=<tspan class="env-val" data-field="path">false</tspan></text>
+      <text class="env-text" x="274" y="216">STORAGE_BUCKET=billing</text>
+    </g>
+
+    <!-- the store -->
+    <g class="part s-store">
+      <rect class="box store-box" x="580" y="40" width="180" height="200" rx="10" />
+      <text class="title" x="596" y="69" data-field="name">AWS S3</text>
+      <text class="muted" x="596" y="87" data-field="kind">production</text>
+      <text class="muted" x="596" y="120">billing/</text>
+      <g class="object">
+        <rect class="obj-box" x="596" y="130" width="148" height="26" rx="5" />
+        <text class="obj-text" x="606" y="147">invoices/inv-42.json</text>
+      </g>
+      <text class="reset-text" x="596" y="186">emptied before</text>
+      <text class="reset-text" x="596" y="202">the next scenario</text>
+    </g>
+
+    <!-- traffic -->
+    <path id="{{ $id }}-http" class="wire s-http" d="M190 104 H250" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label s-http" x="200" y="96">HTTP</text>
+    <path id="{{ $id }}-s3" class="wire s-s3" d="M520 143 H580" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label" x="527" y="135">S3 API</text>
+    <path id="{{ $id }}-check" class="wire dashed s-check" d="M105 240 V300 H670 V240" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label s-check" x="300" y="292">the s3 resource reads the same bucket</text>
+    <g class="packets">
+      <circle r="4" class="packet"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#{{ $id }}-http" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="1.6s" begin="0.5s" repeatCount="indefinite"><mpath href="#{{ $id }}-s3" /></animateMotion></circle>
+      <circle r="4" class="packet check"><animateMotion dur="2.4s" begin="1s" repeatCount="indefinite"><mpath href="#{{ $id }}-check" /></animateMotion></circle>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Production</button>
+      <button type="button" data-go="1">2 · Under tomato</button>
+      <button type="button" data-go="2">3 · A scenario</button>
+      <button type="button" data-go="3">4 · Reset</button>
+    </div>
+    <div class="providers" data-for="0">
+      <button type="button" data-p="aws">AWS S3</button>
+      <button type="button" data-p="r2">Cloudflare R2</button>
+      <button type="button" data-p="spaces">DO Spaces</button>
+      <button type="button" data-p="b2">Backblaze B2</button>
+      <button type="button" data-p="gcs">GCS (interop)</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>In production</strong> the service talks the S3 API to whichever provider its environment names. Pick one: only the endpoint, the region and the addressing style change. The code does not.</p>
+      <p data-for="1"><strong>Under tomato</strong> the same variables point at a MinIO container that tomato starts. MinIO speaks the same API, so the service runs the code path it runs in production.</p>
+      <p data-for="2"><strong>A scenario</strong> calls the service over HTTP, the service writes the invoice to the bucket, and tomato's <code>s3</code> resource reads the bucket to check the object is there, with the right content and content type.</p>
+      <p data-for="3"><strong>Between scenarios</strong> tomato empties the buckets in <code>reset_buckets</code>, so every scenario starts from an empty bucket and none depends on another's leftovers.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var providers = {
+    aws:    { name: "AWS S3",        endpoint: "s3.eu-central-1.amazonaws.com",      region: "eu-central-1", path: "false" },
+    r2:     { name: "Cloudflare R2", endpoint: "<account>.r2.cloudflarestorage.com", region: "auto",         path: "true" },
+    spaces: { name: "DO Spaces",     endpoint: "fra1.digitaloceanspaces.com",        region: "us-east-1",    path: "true" },
+    b2:     { name: "Backblaze B2",  endpoint: "s3.us-west-004.backblazeb2.com",     region: "us-west-004",  path: "true" },
+    gcs:    { name: "Google Cloud",  endpoint: "storage.googleapis.com",             region: "auto",         path: "true" },
+    minio:  { name: "MinIO",         endpoint: "localhost:<port tomato picked>",     region: "us-east-1",    path: "true" }
+  };
+  var picked = "aws", step = 0, timer = null;
+
+  function fill(key) {
+    var p = providers[key];
+    root.querySelectorAll("[data-field]").forEach(function (el) {
+      var f = el.dataset.field;
+      el.textContent = f === "kind" ? (key === "minio" ? "started by tomato" : "production") : p[f];
+    });
+    root.querySelectorAll("[data-p]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.p === picked); });
+  }
+  function show(n) {
+    step = Math.max(0, Math.min(3, n));
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    fill(step === 0 ? picked : "minio");
+  }
+  var touched = false; // once the reader drives it, it is theirs
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= 3 ? 0 : step);
+    timer = setInterval(function () { if (step >= 3) stop(); else show(step + 1); }, 4200);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelectorAll("[data-p]").forEach(function (b) { b.addEventListener("click", function () { manual(); picked = b.dataset.p; show(0); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+
+  // Play on its own the first time it scrolls into view, and pause while it
+  // is out of view; not for readers who asked for less motion.
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/storage=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/storage=(\d)/);
+  show(m ? +m[1] : 0);
+})();
+</script>
