@@ -501,3 +501,32 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .side-by-side > div { min-width: 0; }
 .side-by-side .label { font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); margin-bottom: 4px; }
 .side-by-side .highlight, .side-by-side pre { margin: 0; }
+
+/* how a client drives the service (shortcode client-flow) */
+.client-flow .sc-step { fill: var(--fg-1); font-size: 11px; transition: fill 0.3s; }
+.client-flow .send-box { fill: color-mix(in oklch, var(--when) 12%, var(--bg-1)); stroke: var(--when); }
+.client-flow .send-text { fill: var(--when); font-size: 11.5px; }
+.client-flow .answer-box { fill: var(--pass-bg); stroke: var(--pass); }
+.client-flow .answer-text { fill: var(--pass); font-size: 11.5px; font-weight: 600; }
+.client-flow .send-sub, .client-flow .answer-sub { fill: var(--fg-2); font-size: 10.5px; }
+.client-flow .surface rect { fill: var(--bg-3); stroke: var(--line); transition: fill 0.3s, stroke 0.3s; }
+.client-flow .surface text { fill: var(--fg-3); font-size: 11px; transition: fill 0.3s; }
+.client-flow .surface.on rect { fill: color-mix(in oklch, var(--given) 14%, var(--bg-2)); stroke: var(--given); }
+.client-flow .surface.on text { fill: var(--given); }
+.client-flow .packet.back { fill: var(--pass); }
+.client-flow .packets.go, .client-flow .packets.back { opacity: 0; transition: opacity 0.3s; }
+.client-flow :is(.c-tell, .c-go, .c-back, .c-check, .c-send, .c-answer) { opacity: 0.12; transition: opacity 0.4s; }
+.client-flow:not([data-step="0"]) .c-send { opacity: 1; }
+.client-flow[data-step="0"] .client-box { stroke: var(--given); }
+.client-flow[data-step="1"] :is(.c-tell, .c-go), .client-flow[data-step="1"] .packets.go { opacity: 1; }
+.client-flow[data-step="1"] :is(.c-tell, .c-go) { stroke: var(--when); }
+.client-flow[data-step="1"] .c-when { fill: var(--when); }
+.client-flow:is([data-step="2"], [data-step="3"]) :is(.c-answer, .c-back) { opacity: 1; }
+.client-flow[data-step="2"] .packets.back { opacity: 1; }
+.client-flow[data-step="2"] .c-back { stroke: var(--pass); }
+.client-flow[data-step="3"] .c-check { opacity: 1; stroke: var(--then); }
+.client-flow[data-step="3"] .c-then { fill: var(--then); }
+.client-flow[data-step="3"] .answer-box { stroke-width: 2; }
+.client-flow[data-step="4"] .c-send { opacity: 0.35; }
+.client-flow[data-step="4"] :is(.send-box) { stroke: var(--fail); stroke-dasharray: 4 3; fill: var(--fail-bg); }
+.client-flow[data-step="4"] .send-text { fill: var(--fail); text-decoration: line-through; }

@@ -1,0 +1,164 @@
+{{/* How a client resource drives the service, step by step.
+     {{< client-flow >}} lets the reader switch client; {{< client-flow kind="browser" >}} fixes it. */}}
+{{ $id := printf "client-%d" .Ordinal }}
+{{ $fixed := .Get "kind" }}
+<figure class="explainer flow client-flow" id="{{ $id }}" data-step="0" data-kind="{{ $fixed | default "http" }}">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 300" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">A scenario tells a client what to do; the client uses the service the way a person or another system would, and the scenario checks what came back.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- the scenario -->
+    <g class="part c-tomato">
+      <rect class="box" x="20" y="40" width="170" height="210" rx="10" />
+      <circle class="fruit" cx="42" cy="64" r="7" /><rect class="stem" x="39" y="53" width="6" height="5" rx="1.5" />
+      <text class="title" x="56" y="69">the scenario</text>
+      <text class="sc-text c-when" x="36" y="108">When</text>
+      <text class="sc-step c-when" x="36" y="126" data-f="when">sends "POST" to …</text>
+      <text class="sc-text c-then" x="36" y="168">Then</text>
+      <text class="sc-step c-then" x="36" y="186" data-f="then">response status is …</text>
+      <text class="muted" x="36" y="232">features/*.feature</text>
+    </g>
+
+    <!-- the client -->
+    <g class="part c-client">
+      <rect class="box client-box" x="250" y="40" width="250" height="210" rx="10" />
+      <text class="title" x="266" y="69" data-f="name">"api"</text>
+      <text class="muted" x="330" y="69" data-f="type">http client</text>
+      <g class="c-send">
+        <text class="muted" x="266" y="98">does</text>
+        <rect class="send-box" x="262" y="104" width="226" height="44" rx="6" />
+        <text class="send-text" x="272" y="122" data-f="send">POST /api/todos</text>
+        <text class="send-sub" x="272" y="140" data-f="sendSub">{"title": "Buy milk"}</text>
+      </g>
+      <g class="c-answer">
+        <text class="muted" x="266" y="174">gets back</text>
+        <rect class="answer-box" x="262" y="180" width="226" height="44" rx="6" />
+        <text class="answer-text" x="272" y="198" data-f="answer">201</text>
+        <text class="answer-sub" x="272" y="216" data-f="answerSub">{"id": 1, "title": "Buy milk"}</text>
+      </g>
+    </g>
+
+    <!-- the service -->
+    <g class="part c-app">
+      <rect class="box" x="560" y="40" width="200" height="210" rx="10" />
+      <text class="title" x="576" y="69">todos</text>
+      <text class="muted" x="624" y="69">your service</text>
+      <g class="surface" data-s="http"><rect x="572" y="88" width="176" height="28" rx="6" /><text x="584" y="107">HTTP API  :3000</text></g>
+      <g class="surface" data-s="grpc"><rect x="572" y="124" width="176" height="28" rx="6" /><text x="584" y="143">gRPC API  :50051</text></g>
+      <g class="surface" data-s="browser"><rect x="572" y="160" width="176" height="28" rx="6" /><text x="584" y="179">web page  /</text></g>
+      <g class="surface" data-s="shell"><rect x="572" y="196" width="176" height="28" rx="6" /><text x="584" y="215">CLI  todo add …</text></g>
+    </g>
+
+    <!-- traffic -->
+    <path id="{{ $id }}-tell" class="wire c-tell" d="M190 126 H250" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-go" class="wire c-go" d="M500 126 H560" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-back" class="wire c-back" d="M560 202 H500" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-check" class="wire c-check" d="M250 202 H190" marker-end="url(#{{ $id }}-arrow)" />
+    <g class="packets go">
+      <circle r="4" class="packet"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-tell" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="1.4s" begin="0.5s" repeatCount="indefinite"><mpath href="#{{ $id }}-go" /></animateMotion></circle>
+    </g>
+    <g class="packets back">
+      <circle r="4" class="packet back"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-back" /></animateMotion></circle>
+      <circle r="4" class="packet back"><animateMotion dur="1.4s" begin="0.5s" repeatCount="indefinite"><mpath href="#{{ $id }}-check" /></animateMotion></circle>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    {{ if not $fixed }}
+      <div class="providers kinds">
+        <button type="button" data-k="http">HTTP</button>
+        <button type="button" data-k="grpc">gRPC</button>
+        <button type="button" data-k="browser">Browser</button>
+        <button type="button" data-k="shell">Shell</button>
+      </div>
+    {{ end }}
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Start</button>
+      <button type="button" data-go="1">2 · Act</button>
+      <button type="button" data-go="2">3 · Answer</button>
+      <button type="button" data-go="3">4 · Assert</button>
+      <button type="button" data-go="4">5 · Reset</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>Start.</strong> tomato starts your service and its dependencies. The client only needs to know where the service is: an address, or nothing at all for the shell.</p>
+      <p data-for="1"><strong>Act.</strong> A <code>When</code> step tells the client what to do, and it does it the way <span data-f="who">another service would</span>: <span data-f="act">it sends a request</span>.</p>
+      <p data-for="2"><strong>Answer.</strong> The service answers through the same door: <span data-f="ans">a status, headers and a body</span>.</p>
+      <p data-for="3"><strong>Assert.</strong> <code>Then</code> steps check that answer. Check the effects too, through the other resources: the row in the database, the message on Kafka.</p>
+      <p data-for="4"><strong>Reset.</strong> Before the next scenario the client forgets <span data-f="reset">its headers and cookies</span>, so no scenario leans on another's.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var kinds = {
+    http:    { name: '"api"', type: "http client", when: 'sends "POST" to …', then: 'response status is "201"',
+               send: "POST /api/todos", sendSub: '{"title": "Buy milk"}', answer: "201 Created", answerSub: '{"id": 1, "title": "Buy milk"}',
+               who: "another service would", act: "it sends an HTTP request", ans: "a status, headers and a body", reset: "its headers and cookies" },
+    grpc:    { name: '"grpc"', type: "grpc client", when: 'calls "…/AddTodo" with:', then: "call succeeds",
+               send: "todos.v1.TodoService/AddTodo", sendSub: '{"title": "Buy milk"}', answer: "OK", answerSub: '{"id": 1, "title": "Buy milk"}',
+               who: "another service would", act: "it calls a method, found through the service's reflection", ans: "a message, or a status code", reset: "its metadata and last response" },
+    browser: { name: '"alice"', type: "browser · Chromium", when: 'clicks "Add"', then: 'sees "Water the …" within …',
+               send: 'fills "New todo", clicks "Add"', sendSub: "in a real headless Chromium", answer: "the page shows", answerSub: "Water the tomatoes",
+               who: "a person would", act: "it opens the page, fills in a field and clicks a button, found by their labels", ans: "what the page now shows", reset: "its page, cookies and storage" },
+    shell:   { name: '"shell"', type: "shell", when: 'runs "node cli.js add …"', then: 'stdout contains "Buy milk"',
+               send: "$ node cli.js add Buy milk", sendSub: "a real process", answer: "exit 0", answerSub: "added #1: Buy milk",
+               who: "a person at a terminal would, or a cron job", act: "it runs a command", ans: "an exit code, stdout and stderr", reset: "its environment and working directory" }
+  };
+  var kind = root.dataset.kind, step = 0, timer = null;
+
+  function fill() {
+    var k = kinds[kind];
+    root.dataset.kind = kind;
+    root.querySelectorAll("[data-f]").forEach(function (el) { el.textContent = k[el.dataset.f]; });
+    root.querySelectorAll(".surface").forEach(function (s) { s.classList.toggle("on", s.dataset.s === kind); });
+    root.querySelectorAll("[data-k]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.k === kind); });
+  }
+  function show(n) {
+    step = Math.max(0, Math.min(4, n));
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    fill();
+  }
+  var touched = false;
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= 4 ? 0 : step);
+    timer = setInterval(function () { if (step >= 4) stop(); else show(step + 1); }, 3800);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelectorAll("[data-k]").forEach(function (b) { b.addEventListener("click", function () { manual(); kind = b.dataset.k; show(step); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/client=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/client=(\d)/), k = location.search.match(/kind=(\w+)/);
+  if (k && kinds[k[1]] && !{{ $fixed | jsonify | safeJS }}) kind = k[1];
+  show(m ? +m[1] : 0);
+})();
+</script>
