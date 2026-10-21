@@ -19,7 +19,7 @@ containers:
     image: postgres:16-alpine
     env: { POSTGRES_USER: orders, POSTGRES_PASSWORD: orders, POSTGRES_DB: orders }
     ports: ["5432/tcp"]
-    wait_for: { type: log, target: "database system is ready to accept connections" }
+    wait_for: { type: exec, target: "pg_isready -h 127.0.0.1 -U orders" }
 
 app:
   command: node app.js          # runs its migrations, then listens
@@ -60,6 +60,18 @@ Scenario: Every scenario starts with no orders, and ids from 1
 Scenario: Reference data and migration history survive the reset
   Then "orders-db" table "countries" has "3" rows
   And "orders-db" table "schema_migrations" has "2" rows
+```
+
+## Wait for the real server
+
+A new Postgres container starts a temporary server first, to create the
+database and run init scripts, then restarts as the real one. Both print
+`database system is ready to accept connections`, so a log wait can let your
+service connect into the restart and fail with `EOF`. The temporary server
+only listens on a local socket, so check over TCP:
+
+```yaml
+wait_for: { type: exec, target: "pg_isready -h 127.0.0.1 -U orders" }
 ```
 
 ## What the reset does
