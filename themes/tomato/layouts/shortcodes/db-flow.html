@@ -1,0 +1,126 @@
+{{/* What happens to a database's tables over a tomato run: migrated once,
+     reset before every scenario, except what is kept. */}}
+{{ $id := printf "db-%d" .Ordinal }}
+<figure class="explainer flow db-flow" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 330" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">The app migrates the database once; before every scenario tomato empties its tables, except the migration history and the tables you exclude; each scenario then builds the state it needs.</title>
+
+    <!-- timeline -->
+    <g class="timeline">
+      <line x1="40" y1="40" x2="740" y2="40" class="tl-line" />
+      <g class="tl" data-at="0"><circle cx="70" cy="40" r="7" /><text x="70" y="24">start</text></g>
+      <g class="tl" data-at="1"><circle cx="230" cy="40" r="7" /><text x="230" y="24">scenario 1</text></g>
+      <g class="tl" data-at="2"><circle cx="400" cy="40" r="7" /><text x="400" y="24">reset</text></g>
+      <g class="tl" data-at="3"><circle cx="560" cy="40" r="7" /><text x="560" y="24">scenario 2</text></g>
+      <g class="tl" data-at="4"><circle cx="710" cy="40" r="7" /><text x="710" y="24">… every scenario</text></g>
+    </g>
+
+    <!-- the database -->
+    <rect class="box" x="40" y="70" width="460" height="240" rx="10" />
+    <text class="title" x="56" y="96">orders-db</text>
+    <text class="muted" x="134" y="96">postgres</text>
+
+    <!-- tables -->
+    <g class="tbl t-mig">
+      <rect class="tbl-box" x="56" y="112" width="134" height="180" rx="6" />
+      <text class="tbl-name" x="66" y="132">schema_migrations</text>
+      <g class="rows"><rect class="row" x="64" y="142" width="118" height="18" rx="3" /><text class="row-t" x="70" y="155">000_countries</text>
+      <rect class="row" x="64" y="164" width="118" height="18" rx="3" /><text class="row-t" x="70" y="177">001_orders</text></g>
+      <text class="keep" x="66" y="282">🔒 kept: history</text>
+    </g>
+    <g class="tbl t-ref">
+      <rect class="tbl-box" x="202" y="112" width="134" height="180" rx="6" />
+      <text class="tbl-name" x="212" y="132">countries</text>
+      <g class="rows"><rect class="row" x="210" y="142" width="118" height="18" rx="3" /><text class="row-t" x="216" y="155">DE Germany</text>
+      <rect class="row" x="210" y="164" width="118" height="18" rx="3" /><text class="row-t" x="216" y="177">ID Indonesia</text>
+      <rect class="row" x="210" y="186" width="118" height="18" rx="3" /><text class="row-t" x="216" y="199">NL Netherlands</text></g>
+      <text class="keep" x="212" y="282">🔒 kept: exclude</text>
+    </g>
+    <g class="tbl t-data">
+      <rect class="tbl-box" x="348" y="112" width="140" height="180" rx="6" />
+      <text class="tbl-name" x="358" y="132">orders</text>
+      <g class="rows s1"><rect class="row" x="356" y="142" width="124" height="18" rx="3" /><text class="row-t" x="362" y="155">1 ada · DE</text>
+      <rect class="row" x="356" y="164" width="124" height="18" rx="3" /><text class="row-t" x="362" y="177">2 bob · NL</text></g>
+      <g class="rows s2"><rect class="row" x="356" y="142" width="124" height="18" rx="3" /><text class="row-t" x="362" y="155">42 ada · ID</text></g>
+      <text class="wipe" x="358" y="282">✕ emptied, ids reset</text>
+    </g>
+
+    <!-- the scenario's view -->
+    <g class="side">
+      <rect class="box side-box" x="540" y="70" width="220" height="240" rx="10" />
+      <circle class="fruit" cx="560" cy="94" r="7" /><rect class="stem" x="557" y="83" width="6" height="5" rx="1.5" />
+      <text class="title" x="574" y="99" data-f="side-title">the app starts</text>
+      <text class="side-t" x="556" y="130" data-f="l1">runs its migrations:</text>
+      <text class="side-t" x="556" y="150" data-f="l2">creates the tables,</text>
+      <text class="side-t" x="556" y="170" data-f="l3">records each version,</text>
+      <text class="side-t" x="556" y="190" data-f="l4">writes reference data.</text>
+      <text class="side-c" x="556" y="230" data-f="l5">once per run</text>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Start</button>
+      <button type="button" data-go="1">2 · Scenario</button>
+      <button type="button" data-go="2">3 · Reset</button>
+      <button type="button" data-go="3">4 · Next scenario</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>Once per run</strong>, tomato starts Postgres and then your service, which runs its migrations as it does in production: tables, the migration history, reference data.</p>
+      <p data-for="1"><strong>A scenario</strong> writes what it likes: through your service, or seeded directly in a <code>Background</code>.</p>
+      <p data-for="2"><strong>Before the next scenario</strong> tomato empties every table in one <code>TRUNCATE … RESTART IDENTITY</code>, except the migration history (tomato knows the common tools' tables) and the tables you <code>exclude</code>.</p>
+      <p data-for="3"><strong>The next scenario</strong> starts from exactly the state the first one did, and builds what it needs. No scenario can pass or fail because of another.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var side = [
+    { "side-title": "the app starts", l1: "runs its migrations:", l2: "creates the tables,", l3: "records each version,", l4: "writes reference data.", l5: "once per run" },
+    { "side-title": "scenario 1", l1: "POST /orders  ada · DE", l2: "POST /orders  bob · NL", l3: "", l4: "orders has 2 rows ✓", l5: "ids 1 and 2" },
+    { "side-title": "tomato resets", l1: "TRUNCATE orders", l2: "  RESTART IDENTITY CASCADE", l3: "keeps schema_migrations", l4: "keeps countries (exclude)", l5: "before every scenario" },
+    { "side-title": "scenario 2", l1: "Background:", l2: "  orders has values: 42 …", l3: "GET /orders/42", l4: "country is ID ✓", l5: "same start as scenario 1" }
+  ];
+  var step = 0, timer = null;
+  function show(n) {
+    step = Math.max(0, Math.min(3, n));
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    root.querySelectorAll(".tl").forEach(function (t) { t.classList.toggle("on", +t.dataset.at === step || (step === 3 && t.dataset.at === "4")); });
+    root.querySelectorAll("[data-f]").forEach(function (el) { el.textContent = side[step][el.dataset.f]; });
+  }
+  var touched = false;
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= 3 ? 0 : step);
+    timer = setInterval(function () { if (step >= 3) stop(); else show(step + 1); }, 4000);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/db=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/db=(\d)/);
+  show(m ? +m[1] : 0);
+})();
+</script>

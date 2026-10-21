@@ -1,0 +1,21 @@
+{{/* Two runs of the same two scenarios: one leaks state from A into B, one resets between them. */}}
+<figure class="explainer runs">
+  <div class="run bad">
+    <div class="run-label">Without a reset</div>
+    <div class="lane">
+      <div class="sc pass"><span class="sc-mark">✓</span><div><strong>A · the 4th order is refused</strong><span>the rate limit counter ends at 4</span></div></div>
+      <div class="leak">counter = 4 ⟶</div>
+      <div class="sc fail"><span class="sc-mark">✗</span><div><strong>B · an order is accepted</strong><span>got 429: the counter A left behind</span></div></div>
+    </div>
+    <p class="run-note">B passes alone and fails after A. Reorder the files, run one scenario, run in parallel: a different result each time.</p>
+  </div>
+  <div class="run good">
+    <div class="run-label">With tomato's reset</div>
+    <div class="lane">
+      <div class="sc pass"><span class="sc-mark">✓</span><div><strong>A · the 4th order is refused</strong><span>the rate limit counter ends at 4</span></div></div>
+      <div class="reset">reset ⟶ empty</div>
+      <div class="sc pass"><span class="sc-mark">✓</span><div><strong>B · an order is accepted</strong><span>the counter starts at 0</span></div></div>
+    </div>
+    <p class="run-note">Every scenario starts from the same state, so it passes or fails on its own, in any order.</p>
+  </div>
+</figure>
