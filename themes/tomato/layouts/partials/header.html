@@ -1,0 +1,31 @@
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="{{ "/" | relURL }}" aria-label="{{ site.Title }}">
+      <svg class="mark" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
+        <path d="M12.2 10.2V6.8a3.2 3.2 0 0 1 3.2-3.2h1.2a3.2 3.2 0 0 1 3.2 3.2v3.4z" class="stem" />
+        <circle cx="16" cy="19.6" r="11.2" class="fruit" />
+      </svg>
+      <span>tomato</span><span class="brand-sub">/blog</span>
+    </a>
+    <nav class="nav">
+      {{ $current := . }}
+      {{ range site.Menus.main }}
+        {{ $active := and .Page ($current.IsDescendant .Page) }}
+        <a href="{{ .URL }}"{{ if $active }} aria-current="page"{{ end }}{{ if hasPrefix .URL "http" }} rel="noopener"{{ end }}>{{ .Name }}</a>
+      {{ end }}
+      <button class="theme-toggle" type="button" aria-label="Switch between dark and light">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
+      </button>
+    </nav>
+  </div>
+  <script>
+    document.querySelector(".theme-toggle").addEventListener("click", function () {
+      var root = document.documentElement;
+      var dark = root.dataset.theme
+        ? root.dataset.theme === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = dark ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+    });
+  </script>
+</header>

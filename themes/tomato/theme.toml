@@ -1,0 +1,4 @@
+name = "tomato"
+license = "MIT"
+description = "A Hugo theme in the palette of tomato ui: warm near-black, a red fruit and a green stem."
+min_version = "0.120.0"

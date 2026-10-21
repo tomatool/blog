@@ -1,0 +1,35 @@
+{{ define "main" }}
+  <article class="post">
+    <header class="post-header">
+      {{ if .IsPage }}
+        {{ if eq .Section "posts" }}
+          <div class="post-meta">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+            <span class="dot">·</span>
+            <span>{{ .ReadingTime }} min read</span>
+          </div>
+        {{ end }}
+      {{ end }}
+      <h1>{{ .Title }}</h1>
+      {{ with .Params.tags }}<div class="tags">{{ range . }}<span class="tag">{{ . }}</span>{{ end }}</div>{{ end }}
+    </header>
+
+    {{ if and (eq .Section "posts") (gt .WordCount 600) }}
+      <details class="toc" open>
+        <summary>Contents</summary>
+        {{ .TableOfContents }}
+      </details>
+    {{ end }}
+
+    <div class="prose">
+      {{ .Content }}
+    </div>
+  </article>
+
+  {{ if eq .Section "posts" }}
+    <nav class="post-nav">
+      {{ with .PrevInSection }}<a class="prev" href="{{ .RelPermalink }}"><span>Newer</span>{{ .Title }}</a>{{ end }}
+      {{ with .NextInSection }}<a class="next" href="{{ .RelPermalink }}"><span>Older</span>{{ .Title }}</a>{{ end }}
+    </nav>
+  {{ end }}
+{{ end }}

@@ -1,0 +1,31 @@
+{{ define "main" }}
+  {{ if .IsHome }}
+    <section class="hero">
+      <h1>{{ site.Title }}</h1>
+      <p>{{ site.Params.subtitle }}</p>
+    </section>
+  {{ else }}
+    <section class="hero hero-small"><h1>{{ .Title }}</h1></section>
+  {{ end }}
+
+  {{ $pages := .Pages }}
+  {{ if .IsHome }}{{ $pages = where site.RegularPages "Section" "in" site.Params.mainSections }}{{ end }}
+  <ul class="post-list">
+    {{ range $pages.ByDate.Reverse }}
+      <li class="post-card">
+        <a class="post-link" href="{{ .RelPermalink }}">
+          <div class="post-meta">
+            <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+            <span class="dot">·</span>
+            <span>{{ .ReadingTime }} min read</span>
+          </div>
+          <h2>{{ .Title }}</h2>
+          <p>{{ .Summary | plainify | truncate 220 }}</p>
+          {{ with .Params.tags }}
+            <div class="tags">{{ range . }}<span class="tag">{{ . }}</span>{{ end }}</div>
+          {{ end }}
+        </a>
+      </li>
+    {{ end }}
+  </ul>
+{{ end }}

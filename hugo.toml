@@ -1,0 +1,42 @@
+baseURL = 'https://tomatool.github.io/blog/'
+locale = 'en-US'
+title = 'tomato blog'
+theme = 'tomato'
+enableRobotsTXT = true
+
+[params]
+  subtitle = 'Notes on testing services from the outside, with tomato.'
+  mainSections = ['posts']
+  docs = 'https://tomatool.github.io/tomato/'
+  github = 'https://github.com/tomatool/tomato'
+
+[menus]
+  [[menus.main]]
+    name = 'Posts'
+    pageRef = '/posts'
+    weight = 10
+  [[menus.main]]
+    name = 'About'
+    pageRef = '/about'
+    weight = 20
+  [[menus.main]]
+    name = 'Docs'
+    url = 'https://tomatool.github.io/tomato/'
+    weight = 30
+  [[menus.main]]
+    name = 'GitHub'
+    url = 'https://github.com/tomatool/tomato'
+    weight = 40
+
+[markup]
+  [markup.highlight]
+    noClasses = false
+    lineNos = false
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 3
+  [markup.goldmark.renderer]
+    unsafe = false
+
+[outputs]
+  home = ['HTML', 'RSS']
