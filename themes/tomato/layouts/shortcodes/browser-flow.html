@@ -1,0 +1,224 @@
+{{/* A browser scenario, step by step: what the page does, how tomato finds
+     what a step names, and where each step travels. */}}
+{{ $id := printf "browser-%d" .Ordinal }}
+<figure class="explainer flow browser-flow" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 450" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">A scenario signs in through a real Chromium: tomato finds each field and button by the name a person reads, waits until the page shows the result, checks the database, and closes the browser context before the next scenario.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- the scenario -->
+    <g class="b-scenario">
+      <rect class="box" x="20" y="20" width="262" height="290" rx="10" />
+      <circle class="fruit" cx="42" cy="44" r="7" /><rect class="stem" x="39" y="33" width="6" height="5" rx="1.5" />
+      <text class="title" x="56" y="49">Scenario</text>
+      <text class="muted" x="128" y="49">sign-in.feature</text>
+      <rect class="cur" x="28" y="64" width="246" height="30" rx="5" />
+      <g class="lines">
+        <g class="ln" data-l="0"><text class="kw" x="36" y="78">Given</text><text class="st" x="36" y="90">opens "/"</text><text class="ok" x="262" y="84">✓</text></g>
+        <g class="ln" data-l="1"><text class="kw" x="36" y="112">When</text><text class="st" x="36" y="124">fills "Email" with "ada@…"</text><text class="ok" x="262" y="118">✓</text></g>
+        <g class="ln" data-l="2"><text class="kw" x="36" y="146">And</text><text class="st" x="36" y="158">fills "Password" with "…"</text><text class="ok" x="262" y="152">✓</text></g>
+        <g class="ln" data-l="3"><text class="kw" x="36" y="180">And</text><text class="st" x="36" y="192">clicks "Sign in"</text><text class="ok" x="262" y="186">✓</text></g>
+        <g class="ln" data-l="4"><text class="kw" x="36" y="214">Then</text><text class="st" x="36" y="226">sees "Signed in as …" within "3s"</text><text class="ok" x="262" y="220">✓</text></g>
+        <g class="ln" data-l="5"><text class="kw" x="36" y="248">And</text><text class="st db" x="36" y="260">"shop-db" table "sessions" has "1" rows</text><text class="ok" x="262" y="254">✓</text></g>
+      </g>
+      <text class="muted reset-note" x="36" y="294">↻ next scenario starts clean</text>
+    </g>
+
+    <!-- the browser -->
+    <g class="b-window">
+      <rect class="box win" x="306" y="20" width="454" height="290" rx="10" />
+      <path class="chrome-bar" d="M306 30 a10 10 0 0 1 10 -10 h434 a10 10 0 0 1 10 10 v24 h-454z" />
+      <circle class="dot" cx="324" cy="37" r="4.5" /><circle class="dot" cx="338" cy="37" r="4.5" /><circle class="dot" cx="352" cy="37" r="4.5" />
+      <text class="who" x="744" y="41" text-anchor="end">"ada-browser"</text>
+      <rect class="addr" x="372" y="28" width="250" height="18" rx="9" />
+      <text class="addr-text" x="384" y="41" data-f="url">localhost:3000/</text>
+
+      <!-- the sign-in page -->
+      <g class="pg pg-signin">
+        <text class="h1" x="330" y="90">Sign in</text>
+        <text class="lbl" x="330" y="116">Email</text>
+        <rect class="field f-email" x="330" y="122" width="220" height="26" rx="4" />
+        <text class="val" x="338" y="139" data-f="email"></text>
+        <text class="lbl" x="330" y="168">Password</text>
+        <rect class="field f-pass" x="330" y="174" width="220" height="26" rx="4" />
+        <text class="val" x="338" y="191" data-f="pass"></text>
+        <rect class="btn b-signin" x="330" y="214" width="70" height="26" rx="4" />
+        <text class="btn-t" x="365" y="231" text-anchor="middle">Sign in</text>
+      </g>
+
+      <!-- the list page -->
+      <g class="pg pg-list">
+        <text class="h1" x="330" y="90">Shopping list</text>
+        <rect class="seen" x="326" y="102" width="206" height="22" rx="4" />
+        <text class="p" x="330" y="118">Signed in as ada@example.com</text>
+        <rect class="btn" x="540" y="104" width="64" height="20" rx="4" /><text class="btn-t small" x="572" y="118" text-anchor="middle">Sign out</text>
+        <text class="lbl" x="330" y="156">New item</text>
+        <rect class="field" x="396" y="142" width="150" height="22" rx="4" />
+        <rect class="btn off" x="552" y="142" width="44" height="22" rx="4" /><text class="btn-t small off" x="574" y="157" text-anchor="middle">Add</text>
+      </g>
+
+      <!-- about:blank -->
+      <g class="pg pg-blank">
+        <text class="blank" x="533" y="160" text-anchor="middle">browser context closed</text>
+        <text class="blank sub" x="533" y="180" text-anchor="middle">pages, cookies, storage: gone</text>
+      </g>
+
+      <!-- what tomato found -->
+      <rect class="ring r-email" x="326" y="118" width="228" height="34" rx="6" />
+      <rect class="ring r-pass" x="326" y="170" width="228" height="34" rx="6" />
+      <rect class="ring r-signin" x="326" y="210" width="78" height="34" rx="6" />
+      <g class="tag t-email"><rect x="562" y="122" width="186" height="26" rx="5" /><text x="572" y="139">textbox <tspan class="nm">"Email"</tspan></text></g>
+      <g class="tag t-pass"><rect x="562" y="174" width="186" height="26" rx="5" /><text x="572" y="191">textbox <tspan class="nm">"Password"</tspan></text></g>
+      <g class="tag t-signin">
+        <rect x="414" y="196" width="334" height="72" rx="5" />
+        <text x="424" y="213"><tspan class="no">heading</tspan> <tspan class="nm no">"Sign in"</tspan><tspan class="why"> · not a control</tspan></text>
+        <text x="424" y="233">button <tspan class="nm">"Sign in"</tspan><tspan class="why"> · the one</tspan></text>
+        <text class="checks" x="424" y="255">visible ✓  enabled ✓  not covered ✓</text>
+      </g>
+      <g class="tag t-wait"><rect x="330" y="182" width="208" height="30" rx="5" /><text x="340" y="201" data-f="wait">looking… 0.0s</text></g>
+
+      <!-- cookies -->
+      <g class="jar">
+        <text class="jar-t" x="330" y="296" data-f="jar">cookies: none</text>
+      </g>
+
+      <!-- the pointer -->
+      <g class="pointer">
+        <path d="M0 0 L0 17 L4.5 13 L7.5 20 L10.5 18.7 L7.5 12 L13 12 Z" />
+      </g>
+      <circle class="press" cx="365" cy="227" r="6" />
+    </g>
+
+    <!-- where each step goes -->
+    <g class="route">
+      <g class="node n-tomato"><rect class="box" x="20" y="350" width="130" height="58" rx="9" /><text class="title" x="36" y="375">tomato</text><text class="muted" x="36" y="394">runs the steps</text></g>
+      <g class="node n-chrome"><rect class="box stub-ish" x="206" y="350" width="160" height="58" rx="9" /><text class="title" x="222" y="375">Chromium</text><text class="muted" x="222" y="394">container · preset</text></g>
+      <g class="node n-app"><rect class="box" x="430" y="350" width="140" height="58" rx="9" /><text class="title" x="446" y="375">your app</text><text class="muted" x="446" y="394">localhost:3000</text></g>
+      <g class="node n-db"><rect class="box" x="626" y="350" width="134" height="58" rx="9" /><text class="title" x="642" y="375">shop-db</text><text class="muted" x="642" y="394" data-f="rows">sessions: 0 rows</text></g>
+
+      <path id="{{ $id }}-cdp" class="wire w-cdp" d="M150 379 H206" marker-end="url(#{{ $id }}-arrow)" />
+      <path id="{{ $id }}-tun" class="wire w-tun" d="M366 379 H430" marker-end="url(#{{ $id }}-arrow)" />
+      <path id="{{ $id }}-sql" class="wire w-sql" d="M570 379 H626" marker-end="url(#{{ $id }}-arrow)" />
+      <path id="{{ $id }}-chk" class="wire w-chk" d="M85 408 V430 H693 V408" marker-end="url(#{{ $id }}-arrow)" />
+      <text class="wire-label l-cdp" x="178" y="342" text-anchor="middle">DevTools</text>
+      <text class="wire-label l-tun" x="398" y="342" text-anchor="middle">tunnel</text>
+      <text class="wire-label l-sql" x="598" y="342" text-anchor="middle">SQL</text>
+      <text class="wire-label l-chk" x="389" y="444" text-anchor="middle">the assertion reads the table itself</text>
+      <g class="pk p-cdp"><circle r="4" class="packet"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#{{ $id }}-cdp" /></animateMotion></circle></g>
+      <g class="pk p-tun"><circle r="4" class="packet"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#{{ $id }}-tun" /></animateMotion></circle></g>
+      <g class="pk p-sql"><circle r="4" class="packet"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#{{ $id }}-sql" /></animateMotion></circle></g>
+      <g class="pk p-chk"><circle r="4" class="packet check"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#{{ $id }}-chk" /></animateMotion></circle></g>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Open</button>
+      <button type="button" data-go="1">2 · Fill</button>
+      <button type="button" data-go="2">3 · Fill</button>
+      <button type="button" data-go="3">4 · Click</button>
+      <button type="button" data-go="4">5 · See</button>
+      <button type="button" data-go="5">6 · Check the effect</button>
+      <button type="button" data-go="6">7 · Reset</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong><code>opens "/"</code></strong>: tomato tells Chromium, over the DevTools protocol, to load the page, and waits until it has. Chromium runs in a container, yet <code>localhost:3000</code> reaches your app on your machine through a tunnel, so the page keeps the origin, the cookies and the secure context a real user gets.</p>
+      <p data-for="1"><strong><code>fills "Email"</code></strong> names no selector. tomato asks the page's accessibility tree for the field whose name is <em>Email</em>: its label, as a person reads it and a screen reader announces it.</p>
+      <p data-for="2"><strong><code>fills "Password"</code></strong>: the same lookup, the same way a person would find it. A field without a label would fail here, the same bug a screen-reader user hits.</p>
+      <p data-for="3"><strong><code>clicks "Sign in"</code></strong>: two things on the page are called <em>Sign in</em>, the heading and the button. A person clicking means the button, so tomato takes the control. It waits until it is visible, enabled and not covered, clicks its middle, and tries again if the page moved under the pointer. The app writes a session and sets a cookie.</p>
+      <p data-for="4"><strong><code>sees "…" within "3s"</code></strong>: the page changes when it likes, so tomato looks again every 50 ms until the text shows up, and moves on the moment it does. No sleeps: a fast page is a fast test, a slow one gets up to 3 seconds.</p>
+      <p data-for="5"><strong>Then check what the click did</strong>. The page saying "Signed in" proves the page; the session row proves the app. The next step reads <code>shop-db</code> directly, past the browser.</p>
+      <p data-for="6"><strong>Before the next scenario</strong> tomato closes ada's browser context: tabs, cookies, local storage and service workers go, along with the database rows. Chromium keeps running, so the next scenario starts signed out, in milliseconds.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var LAST = 6;
+  var EMAIL = "ada@example.com", PASS = "•••••••••";
+  // where the pointer rests at each step (its tip)
+  var POINT = [[700, 250], [440, 135], [440, 187], [362, 229], [470, 115], [600, 270], [690, 250]];
+  var state = [
+    { url: "localhost:3000/", email: "", pass: "", jar: "cookies: none", rows: "sessions: 0 rows" },
+    { url: "localhost:3000/", email: EMAIL, pass: "", jar: "cookies: none", rows: "sessions: 0 rows" },
+    { url: "localhost:3000/", email: EMAIL, pass: PASS, jar: "cookies: none", rows: "sessions: 0 rows" },
+    { url: "localhost:3000/login", email: EMAIL, pass: PASS, jar: "cookies: sid=7f3c…", rows: "sessions: 1 row" },
+    { url: "localhost:3000/list", email: EMAIL, pass: PASS, jar: "cookies: sid=7f3c…", rows: "sessions: 1 row" },
+    { url: "localhost:3000/list", email: EMAIL, pass: PASS, jar: "cookies: sid=7f3c…", rows: "sessions: 1 row ✓" },
+    { url: "about:blank", email: "", pass: "", jar: "cookies: none", rows: "sessions: 0 rows" }
+  ];
+  var f = function (k) { return root.querySelector('[data-f="' + k + '"]'); };
+  var pointer = root.querySelector(".pointer");
+  var step = 0, timer = null, typing = null, waiting = null;
+  function type(el, text) {
+    var i = 0; el.textContent = "";
+    typing = setInterval(function () { el.textContent = text.slice(0, ++i); if (i >= text.length) { clearInterval(typing); typing = null; } }, 55);
+  }
+  function show(n, animate) {
+    step = Math.max(0, Math.min(LAST, n));
+    clearInterval(typing); clearInterval(waiting); typing = waiting = null;
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    root.querySelectorAll(".ln").forEach(function (l) {
+      var i = +l.dataset.l;
+      l.classList.toggle("now", i === step);
+      l.classList.toggle("done", i < step && step < LAST);
+    });
+    var cur = root.querySelector(".cur");
+    cur.setAttribute("y", 64 + Math.min(step, 5) * 34);
+    var s = state[step];
+    ["url", "email", "pass", "jar", "rows"].forEach(function (k) { f(k).textContent = s[k]; });
+    if (animate && step === 1) type(f("email"), EMAIL);
+    if (animate && step === 2) type(f("pass"), PASS);
+    var w = f("wait");
+    if (animate && step === 4) {
+      var t0 = Date.now(); w.textContent = "looking… 0.0s";
+      root.classList.remove("found");
+      waiting = setInterval(function () {
+        var dt = (Date.now() - t0) / 1000;
+        if (dt >= 0.4) { clearInterval(waiting); waiting = null; w.textContent = "found after 0.4s ✓"; root.classList.add("found"); }
+        else w.textContent = "looking… " + dt.toFixed(1) + "s";
+      }, 50);
+    } else { w.textContent = "found after 0.4s ✓"; root.classList.add("found"); }
+    var p = POINT[step];
+    pointer.style.transform = "translate(" + p[0] + "px," + p[1] + "px)";
+  }
+  var touched = false;
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= LAST ? 0 : step, true);
+    timer = setInterval(function () { if (step >= LAST) stop(); else show(step + 1, true); }, 3800);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go, true); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1, true); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1, true); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/browser=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/browser=(\d)/);
+  show(m ? +m[1] : 0, false);
+})();
+</script>

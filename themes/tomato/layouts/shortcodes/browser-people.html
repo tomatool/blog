@@ -1,0 +1,112 @@
+{{/* Two browser resources in one Chromium are two people: each has its own
+     browser context, and what one does reaches the other through the app. */}}
+{{ $id := printf "people-%d" .Ordinal }}
+<figure class="explainer flow people-flow" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 330" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">Two browser resources share one Chromium but each has its own cookies and storage; Ada adds Basil, the app stores it, and Bob's page shows it.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <rect class="box stub" x="20" y="20" width="540" height="290" rx="12" />
+    <text class="title" x="38" y="44">Chromium</text>
+    <text class="muted" x="110" y="44">one container, two browser contexts</text>
+
+    {{ range $i, $p := slice (dict "who" "ada" "x" 38) (dict "who" "bob" "x" 296) }}
+    <g class="person p-{{ $p.who }}">
+      <rect class="box win" x="{{ $p.x }}" y="60" width="246" height="232" rx="9" />
+      <path class="chrome-bar" d="M{{ $p.x }} 69 a9 9 0 0 1 9 -9 h228 a9 9 0 0 1 9 9 v19 h-246z" />
+      <circle class="dot" cx="{{ add $p.x 14 }}" cy="74" r="3.5" /><circle class="dot" cx="{{ add $p.x 25 }}" cy="74" r="3.5" /><circle class="dot" cx="{{ add $p.x 36 }}" cy="74" r="3.5" />
+      <text class="who" x="{{ add $p.x 236 }}" y="78" text-anchor="end">"{{ $p.who }}-browser"</text>
+      <text class="h1 sm" x="{{ add $p.x 14 }}" y="114">Shopping list</text>
+      <text class="p sm" x="{{ add $p.x 14 }}" y="134">Signed in as {{ $p.who }}@example.com</text>
+      <text class="lbl sm" x="{{ add $p.x 14 }}" y="162">New item</text>
+      <rect class="field" x="{{ add $p.x 72 }}" y="149" width="110" height="20" rx="4" />
+      {{ if eq $p.who "ada" }}<text class="val sm" x="{{ add $p.x 78 }}" y="163" data-f="typed"></text>{{ end }}
+      <rect class="btn" x="{{ add $p.x 188 }}" y="149" width="42" height="20" rx="4" /><text class="btn-t small" x="{{ add $p.x 209 }}" y="163" text-anchor="middle">Add</text>
+      <g class="item it-{{ $p.who }}"><rect class="chk" x="{{ add $p.x 14 }}" y="186" width="11" height="11" rx="2" /><text class="p sm" x="{{ add $p.x 32 }}" y="196">Basil</text></g>
+      <text class="jar-t" x="{{ add $p.x 14 }}" y="280">cookies: sid={{ if eq $p.who "ada" }}7f3c…{{ else }}b21e…{{ end }}</text>
+    </g>
+    {{ end }}
+    <rect class="ring r-add" x="222" y="145" width="50" height="28" rx="6" />
+    <rect class="seen it-seen" x="306" y="180" width="70" height="22" rx="4" />
+    <text class="wait-t" x="390" y="196">within "3s" ✓</text>
+
+    <g class="node"><rect class="box srv-box" x="620" y="60" width="140" height="96" rx="9" /><text class="title" x="636" y="86">your app</text><text class="muted" x="636" y="104">stores the item;</text><text class="muted" x="636" y="120">pages poll for it</text></g>
+    <g class="node"><rect class="box db-box" x="620" y="196" width="140" height="96" rx="9" /><text class="title" x="636" y="222">shop-db</text><text class="muted" x="636" y="240" data-f="items">items: none</text></g>
+    <path id="{{ $id }}-up" class="wire w-up" d="M247 132 C 300 20, 560 20, 620 92" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-db" class="wire w-db" d="M690 156 V196" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-down" class="wire w-down" d="M620 124 C 590 160, 560 190, 542 190" marker-end="url(#{{ $id }}-arrow)" />
+    <g class="pk p-up"><circle r="4" class="packet"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#{{ $id }}-up" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#{{ $id }}-db" /></animateMotion></circle></g>
+    <g class="pk p-down"><circle r="4" class="packet check"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#{{ $id }}-down" /></animateMotion></circle></g>
+    <text class="reset-x" x="290" y="190" text-anchor="middle">✕ both contexts closed</text>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Two people</button>
+      <button type="button" data-go="1">2 · Ada adds</button>
+      <button type="button" data-go="2">3 · Bob sees</button>
+      <button type="button" data-go="3">4 · Reset</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>Two resources, one Chromium.</strong> <code>ada-browser</code> and <code>bob-browser</code> each get their own browser context: their own cookies, storage and tabs, like two people on two laptops. Both are signed in, each with their own session.</p>
+      <p data-for="1"><strong>Ada adds Basil</strong> on her page. Her click reaches the app, which stores the item.</p>
+      <p data-for="2"><strong><code>"bob-browser" sees "Basil" within "3s"</code></strong>: Bob's page picks it up through the app, by polling, a websocket or anything else, and the step passes the moment it shows. Collaboration takes no special steps.</p>
+      <p data-for="3"><strong>Before the next scenario</strong> both contexts are closed and the tables emptied. Nobody stays signed in.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var LAST = 3, step = 0, timer = null, typing = null;
+  var typed = root.querySelector('[data-f="typed"]'), items = root.querySelector('[data-f="items"]');
+  function show(n, animate) {
+    step = Math.max(0, Math.min(LAST, n));
+    clearInterval(typing); typing = null;
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    items.textContent = step === 1 || step === 2 ? "items: Basil" : "items: none";
+    if (step === 1 && animate) {
+      var i = 0; typed.textContent = "";
+      typing = setInterval(function () { typed.textContent = "Basil".slice(0, ++i); if (i >= 5) { clearInterval(typing); typing = null; } }, 90);
+    } else typed.textContent = step === 1 ? "Basil" : "";
+  }
+  var touched = false;
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= LAST ? 0 : step, true);
+    timer = setInterval(function () { if (step >= LAST) stop(); else show(step + 1, true); }, 3800);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go, true); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1, true); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1, true); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/people=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/people=(\d)/);
+  show(m ? +m[1] : 0, false);
+})();
+</script>

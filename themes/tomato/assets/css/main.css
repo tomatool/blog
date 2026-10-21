@@ -637,3 +637,103 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .leak { color: var(--fail); } .reset { color: var(--pass); }
 .run-note { margin: 10px 0 0; font-size: 14px; color: var(--fg-2); }
 @media (max-width: 720px) { .lane { grid-template-columns: 1fr; } .leak, .reset { text-align: center; } }
+
+/* a browser scenario (shortcodes browser-flow, browser-people) */
+:is(.browser-flow, .people-flow) .win { fill: var(--bg-1); }
+:is(.browser-flow, .people-flow) .chrome-bar { fill: var(--bg-3); }
+:is(.browser-flow, .people-flow) .dot { fill: var(--line-strong); }
+:is(.browser-flow, .people-flow) .who { fill: var(--given); font-size: 11px; }
+:is(.browser-flow, .people-flow) .h1 { fill: var(--fg-0); font: 600 17px var(--font-ui); }
+:is(.browser-flow, .people-flow) .h1.sm { font-size: 14px; }
+:is(.browser-flow, .people-flow) .lbl { fill: var(--fg-2); font: 12.5px var(--font-ui); }
+:is(.browser-flow, .people-flow) .p { fill: var(--fg-1); font: 13px var(--font-ui); }
+:is(.browser-flow, .people-flow) :is(.p, .lbl).sm { font-size: 11.5px; }
+:is(.browser-flow, .people-flow) .field { fill: var(--bg-0); stroke: var(--line-strong); }
+:is(.browser-flow, .people-flow) .val { fill: var(--fg-0); font: 12.5px var(--font-ui); }
+:is(.browser-flow, .people-flow) .val.sm { font-size: 11.5px; }
+:is(.browser-flow, .people-flow) .btn { fill: var(--bg-3); stroke: var(--line-strong); transition: fill 0.15s; }
+:is(.browser-flow, .people-flow) .btn-t { fill: var(--fg-0); font: 12.5px var(--font-ui); }
+:is(.browser-flow, .people-flow) .btn-t.small { font-size: 11px; }
+:is(.browser-flow, .people-flow) .off { opacity: 0.45; }
+:is(.browser-flow, .people-flow) .jar-t { fill: var(--warn); font-size: 10.5px; }
+:is(.browser-flow, .people-flow) .ring { fill: none; stroke: var(--when); stroke-width: 2; stroke-dasharray: 5 3; opacity: 0; transition: opacity 0.3s; }
+:is(.browser-flow, .people-flow) .seen { fill: var(--pass-bg); stroke: var(--pass); opacity: 0; transition: opacity 0.3s; }
+.browser-flow .addr { fill: var(--bg-1); stroke: var(--line); }
+.browser-flow .addr-text { fill: var(--fg-2); font-size: 10.5px; }
+.browser-flow .pg { opacity: 0; transition: opacity 0.35s; }
+.browser-flow .blank { fill: var(--fg-3); font-size: 12px; }
+.browser-flow .blank.sub { font-size: 11px; }
+.browser-flow .tag { opacity: 0; transition: opacity 0.3s; }
+.browser-flow .tag rect { fill: color-mix(in oklch, var(--when) 12%, var(--bg-1)); stroke: var(--when); }
+.browser-flow .tag text { fill: var(--fg-2); font-size: 11px; }
+.browser-flow .tag .nm { fill: var(--when); }
+.browser-flow .tag .no { fill: var(--fg-3); text-decoration: line-through; }
+.browser-flow .tag .why { fill: var(--fg-3); }
+.browser-flow .tag .checks { fill: var(--pass); }
+.browser-flow .t-wait rect { fill: color-mix(in oklch, var(--then) 12%, var(--bg-1)); stroke: var(--then); }
+.browser-flow .t-wait text { fill: var(--then); }
+.browser-flow.found .t-wait rect { fill: var(--pass-bg); stroke: var(--pass); }
+.browser-flow.found .t-wait text { fill: var(--pass); }
+.browser-flow .pointer { fill: var(--fg-0); stroke: var(--bg-0); stroke-width: 1.2; transition: transform 0.9s cubic-bezier(.5,0,.2,1); }
+.browser-flow .press { fill: none; stroke: var(--when); stroke-width: 2; opacity: 0; }
+.browser-flow[data-step="3"] .press { animation: b-press 0.6s 1s ease-out 2; }
+@keyframes b-press { from { opacity: 1; r: 4; } to { opacity: 0; r: 26; } }
+.browser-flow[data-step="3"] .b-signin { fill: color-mix(in oklch, var(--when) 25%, var(--bg-3)); transition-delay: 1s; }
+/* the scenario column */
+.browser-flow .cur { fill: color-mix(in oklch, var(--when) 12%, var(--bg-2)); stroke: var(--when); transition: y 0.4s; }
+.browser-flow .kw { fill: var(--fg-3); font-size: 10.5px; }
+.browser-flow .st { fill: var(--fg-1); font-size: 11px; }
+.browser-flow .st.db { font-size: 10px; }
+.browser-flow .ok { fill: var(--pass); font-size: 13px; opacity: 0; transition: opacity 0.3s; }
+.browser-flow .ln.done .ok { opacity: 1; }
+.browser-flow .ln.now .st { fill: var(--fg-0); }
+.browser-flow .reset-note { opacity: 0; transition: opacity 0.3s; }
+.browser-flow[data-step="6"] .reset-note { opacity: 1; fill: var(--fail); }
+.browser-flow[data-step="6"] .cur { opacity: 0; }
+/* the route */
+.browser-flow .route .wire, .browser-flow .wire-label { opacity: 0.18; transition: opacity 0.3s, stroke 0.3s; }
+.browser-flow .route .pk { opacity: 0; transition: opacity 0.3s; }
+.browser-flow .route .box { transition: stroke 0.3s, fill 0.3s; }
+/* per step */
+.browser-flow:is([data-step="0"], [data-step="1"], [data-step="2"], [data-step="3"]) .pg-signin,
+.browser-flow:is([data-step="4"], [data-step="5"]) .pg-list,
+.browser-flow[data-step="6"] .pg-blank { opacity: 1; }
+.browser-flow[data-step="1"] :is(.r-email, .t-email),
+.browser-flow[data-step="2"] :is(.r-pass, .t-pass),
+.browser-flow[data-step="3"] :is(.r-signin, .t-signin),
+.browser-flow[data-step="4"] :is(.seen, .t-wait) { opacity: 1; }
+.browser-flow:is([data-step="0"], [data-step="1"], [data-step="2"], [data-step="3"], [data-step="4"]) :is(.w-cdp, .l-cdp, .p-cdp) { opacity: 1; }
+.browser-flow:is([data-step="0"], [data-step="3"], [data-step="4"]) :is(.w-tun, .l-tun, .p-tun) { opacity: 1; }
+.browser-flow[data-step="3"] :is(.w-sql, .l-sql, .p-sql) { opacity: 1; }
+.browser-flow .route .wire { stroke: var(--when); }
+.browser-flow:is([data-step="0"], [data-step="1"], [data-step="2"], [data-step="3"], [data-step="4"]) .n-chrome .box { stroke: var(--given); fill: color-mix(in oklch, var(--given) 9%, var(--bg-2)); }
+.browser-flow:is([data-step="0"], [data-step="3"], [data-step="4"]) .n-app .box { stroke: var(--given); }
+.browser-flow[data-step="3"] .n-db .box { stroke: var(--when); }
+.browser-flow[data-step="5"] :is(.w-chk, .l-chk, .p-chk) { opacity: 1; }
+.browser-flow[data-step="5"] .w-chk { stroke: var(--then); }
+.browser-flow[data-step="5"] .n-db .box { stroke: var(--pass); fill: var(--pass-bg); }
+.browser-flow[data-step="5"] .n-db .muted { fill: var(--pass); }
+.browser-flow[data-step="5"] .pg-list { opacity: 0.35; }
+.browser-flow[data-step="6"] .jar-t { text-decoration: line-through; fill: var(--fail); }
+.browser-flow[data-step="6"] .win { stroke: var(--fail); stroke-dasharray: 5 4; }
+.browser-flow[data-step="6"] .n-db .box { stroke: var(--fail); stroke-dasharray: 5 4; }
+/* two people */
+.people-flow .chk { fill: var(--bg-0); stroke: var(--line-strong); }
+.people-flow .item { opacity: 0; transition: opacity 0.4s; }
+.people-flow .wait-t { fill: var(--pass); font-size: 11.5px; opacity: 0; transition: opacity 0.3s; }
+.people-flow .reset-x { fill: var(--fail); font-size: 13px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+.people-flow .wire { opacity: 0.15; stroke: var(--when); transition: opacity 0.3s; }
+.people-flow .w-down { stroke: var(--then); }
+.people-flow .pk { opacity: 0; transition: opacity 0.3s; }
+.people-flow[data-step="0"] .win { stroke: var(--given); }
+.people-flow[data-step="1"] :is(.r-add, .w-up, .w-db, .p-up) { opacity: 1; }
+.people-flow:is([data-step="1"], [data-step="2"]) .it-ada { opacity: 1; transition-delay: 0.8s; }
+.people-flow[data-step="1"] :is(.srv-box, .db-box) { stroke: var(--when); }
+.people-flow[data-step="2"] :is(.it-bob, .it-seen, .wait-t, .w-down, .p-down) { opacity: 1; }
+.people-flow[data-step="2"] .it-bob { transition-delay: 0.5s; }
+.people-flow[data-step="2"] .p-bob .win { stroke: var(--pass); }
+.people-flow[data-step="3"] .reset-x { opacity: 1; }
+.people-flow[data-step="3"] .person { opacity: 0.3; }
+.people-flow[data-step="3"] :is(.win, .db-box) { stroke: var(--fail); stroke-dasharray: 5 4; }
+.post-shot { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--r); margin: 1rem 0; }
+@media (prefers-reduced-motion: reduce) { :is(.browser-flow, .people-flow) .pk { display: none; } .browser-flow .pointer { transition: none; } .browser-flow .press { animation: none; } }
