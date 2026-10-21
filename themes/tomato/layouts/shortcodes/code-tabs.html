@@ -1,0 +1,60 @@
+{{/* The same code in several languages, one tab each (shortcode tab inside).
+     Picking a language switches every group on the page, and is remembered
+     across pages along with the other explainers' choice. */}}
+{{ $_ := .Inner }}
+{{ $id := printf "code-tabs-%d" .Ordinal }}
+{{ $tabs := .Store.Get "tabs" }}
+<div class="code-tabs" id="{{ $id }}">
+  <div class="lang-tabs" role="tablist" aria-label="Language">
+    {{ range $i, $t := $tabs }}
+      <button type="button" role="tab" id="{{ $id }}-tab-{{ $t.lang }}" aria-controls="{{ $id }}-{{ $t.lang }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" data-lang="{{ $t.lang }}"{{ if ne $i 0 }} tabindex="-1"{{ end }}>{{ $t.name }}</button>
+    {{ end }}
+  </div>
+  {{ range $i, $t := $tabs }}
+    <div class="lang-panel" role="tabpanel" id="{{ $id }}-{{ $t.lang }}" aria-labelledby="{{ $id }}-tab-{{ $t.lang }}" data-lang="{{ $t.lang }}"{{ if ne $i 0 }} hidden{{ end }}>
+      {{ $t.body }}
+    </div>
+  {{ end }}
+</div>
+{{ if not (.Page.Store.Get "code-tabs-script") }}
+{{ .Page.Store.Set "code-tabs-script" true }}
+<script>
+(function () {
+  var groups = Array.prototype.slice.call(document.querySelectorAll(".code-tabs"));
+  function pick(group, lang, focus) {
+    var tabs = Array.prototype.slice.call(group.querySelectorAll("[role=tab]"));
+    if (!tabs.some(function (t) { return t.dataset.lang === lang; })) return false;
+    tabs.forEach(function (t) {
+      var on = t.dataset.lang === lang;
+      t.setAttribute("aria-selected", on);
+      t.tabIndex = on ? 0 : -1;
+      if (on && focus) t.focus();
+    });
+    group.querySelectorAll(".lang-panel").forEach(function (p) { p.hidden = p.dataset.lang !== lang; });
+    return true;
+  }
+  function pickAll(lang, from) {
+    var anchor = from && from.getBoundingClientRect().top;
+    groups.forEach(function (g) { pick(g, lang, g === from); });
+    // Keep the group the reader clicked where it was, though others above it changed height.
+    if (from) window.scrollBy(0, from.getBoundingClientRect().top - anchor);
+    try { localStorage.setItem("lang", lang); } catch (e) {}
+  }
+  groups.forEach(function (g) {
+    var tabs = Array.prototype.slice.call(g.querySelectorAll("[role=tab]"));
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { pickAll(t.dataset.lang, g); });
+      t.addEventListener("keydown", function (e) {
+        var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+        if (d) pickAll(tabs[(i + d + tabs.length) % tabs.length].dataset.lang, g);
+      });
+    });
+  });
+  var saved = null;
+  try { saved = localStorage.getItem("lang"); } catch (e) {}
+  var m = location.search.match(/lang=(\w+)/);
+  var want = (m && m[1]) || saved;
+  if (want) groups.forEach(function (g) { pick(g, want); });
+})();
+</script>
+{{ end }}

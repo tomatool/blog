@@ -1,0 +1,7 @@
+{{/* One language of a code-tabs group: {{< tab "Node.js" "nodejs" >}}```js …```{{< /tab >}}.
+     The second argument is the language id, shared with the other explainers
+     (go, rust, kotlin, java, python, nodejs); it defaults to the name, lowercased. */}}
+{{ $name := .Get 0 }}
+{{ $lang := .Get 1 | default (lower $name) }}
+{{ $body := .Page.RenderString (dict "display" "block") (strings.TrimSpace .Inner) }}
+{{ .Parent.Store.Add "tabs" (slice (dict "name" $name "lang" $lang "body" $body)) }}

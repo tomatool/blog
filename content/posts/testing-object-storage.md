@@ -20,9 +20,11 @@ resource reads the bucket to check what the service wrote:
 ## The service
 
 The service builds its client from the environment and nothing else. Here is
-the client for a small Go service, `invoices`, that stores each invoice it
-issues as JSON:
+the client for a small service, `invoices`, that stores each invoice it issues
+as JSON, with the AWS SDK in four languages:
 
+{{< code-tabs >}}
+{{< tab "Go" >}}
 ```go
 func newStore() *s3.Client {
 	return s3.New(s3.Options{
@@ -37,6 +39,63 @@ func newStore() *s3.Client {
 	})
 }
 ```
+{{< /tab >}}
+{{< tab "Java" >}}
+```java
+static S3Client newStore() {
+    return S3Client.builder()
+        .endpointOverride(URI.create(System.getenv("STORAGE_ENDPOINT")))
+        .region(Region.of(System.getenv("STORAGE_REGION")))
+        .forcePathStyle("true".equals(System.getenv("STORAGE_PATH_STYLE")))
+        .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(
+            System.getenv("STORAGE_ACCESS_KEY"), System.getenv("STORAGE_SECRET_KEY"))))
+        // Only send checksums the operation requires: not every
+        // S3-compatible provider accepts the SDK's default CRC32 headers.
+        .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+        .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
+        .build();
+}
+```
+{{< /tab >}}
+{{< tab "Python" >}}
+```python
+def new_store():
+    return boto3.client(
+        "s3",
+        endpoint_url=os.environ["STORAGE_ENDPOINT"],
+        region_name=os.environ["STORAGE_REGION"],
+        aws_access_key_id=os.environ["STORAGE_ACCESS_KEY"],
+        aws_secret_access_key=os.environ["STORAGE_SECRET_KEY"],
+        config=Config(
+            s3={"addressing_style": "path" if os.environ.get("STORAGE_PATH_STYLE") == "true" else "virtual"},
+            # Only send checksums the operation requires: not every
+            # S3-compatible provider accepts the SDK's default CRC32 headers.
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        ),
+    )
+```
+{{< /tab >}}
+{{< tab "Node.js" "nodejs" >}}
+```js
+export function newStore() {
+  return new S3Client({
+    endpoint: process.env.STORAGE_ENDPOINT,
+    region: process.env.STORAGE_REGION,
+    forcePathStyle: process.env.STORAGE_PATH_STYLE === "true",
+    credentials: {
+      accessKeyId: process.env.STORAGE_ACCESS_KEY,
+      secretAccessKey: process.env.STORAGE_SECRET_KEY,
+    },
+    // Only send checksums the operation requires: not every
+    // S3-compatible provider accepts the SDK's default CRC32 headers.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+  });
+}
+```
+{{< /tab >}}
+{{< /code-tabs >}}
 
 The handler calls `PutObject` with the key `invoices/<id>.json`. It never
 asks which provider it is talking to.

@@ -394,6 +394,58 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .providers button[aria-pressed="true"] { color: var(--arg); border-style: solid; border-color: var(--arg); }
 
+/* the MSK IAM flow (shortcode msk-iam-flow) */
+.msk-flow .env-text { font-size: 10.5px; }
+.msk-flow .m-tick { fill: var(--pass); font-size: 12px; opacity: 0; transition: opacity 0.3s; }
+.msk-flow .m-packets { opacity: 0; transition: opacity 0.3s; }
+.msk-flow .env-val { fill: var(--arg); }
+.msk-flow .verdict { font-size: 12px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+.msk-flow .verdict.ok { fill: var(--pass); } .msk-flow .verdict.no { fill: var(--fail); }
+.msk-flow .msg-box { fill: var(--pass-bg); stroke: var(--pass); }
+.msk-flow .msg-text { fill: var(--pass); font-size: 11px; }
+.msk-flow .creds { fill: var(--arg); font-size: 11.5px; transition: opacity 0.3s; }
+.msk-flow .unreachable { fill: var(--fail); font-size: 11.5px; opacity: 0; }
+.msk-flow .amb-text { fill: var(--fg-3); font-size: 11px; } .msk-flow .amb-key { fill: var(--warn); font-size: 11px; }
+.msk-flow .packet.key { fill: var(--arg); } .msk-flow .packet.read { fill: var(--then); } .msk-flow .packet.bad { fill: var(--warn); }
+.msk-flow :is(.m-tomato, .msg, .ambient, .w-http, .w-plain, .w-creds, .w-sasl, .w-policy) { opacity: 0.12; transition: opacity 0.4s; }
+.msk-flow .box { transition: stroke 0.3s, fill 0.3s; }
+/* 1 · on AWS: the real pieces */
+.msk-flow[data-step="0"] :is(.w-creds, .w-sasl, .w-policy) { opacity: 1; }
+.msk-flow[data-step="0"] .m-tomato { opacity: 0.12; }
+/* 2 · under tomato: the stand-ins light up */
+.msk-flow:not([data-step="0"]) :is(.token-box, .sts-box, .broker-box, .policy-box) { stroke: var(--given); fill: color-mix(in oklch, var(--given) 9%, var(--bg-2)); }
+.msk-flow:not([data-step="0"]) .m-tomato { opacity: 0.4; }
+.msk-flow[data-step="1"] :is(.w-creds, .w-sasl, .w-policy) { opacity: 0.5; }
+.msk-flow:is([data-step="1"]) .creds { opacity: 0.3; }
+/* 3 · credentials */
+.msk-flow[data-step="2"] .w-creds { opacity: 1; }
+.msk-flow[data-step="2"] .w-creds.wire, .msk-flow[data-step="2"] path.w-creds { stroke: var(--when); }
+.msk-flow[data-step="2"] .pk-creds { opacity: 1; }
+.msk-flow[data-step="2"] .m-policy { opacity: 0.35; }
+/* 4 · handshake */
+.msk-flow[data-step="3"] :is(.w-sasl, .w-policy) { opacity: 1; }
+.msk-flow[data-step="3"] path.w-sasl, .msk-flow[data-step="3"] path.w-policy { stroke: var(--arg); }
+.msk-flow[data-step="3"] .pk-sasl { opacity: 1; }
+.msk-flow:is([data-step="3"], [data-step="4"]) .verdict.ok { opacity: 1; }
+.msk-flow[data-step="3"] .policy-box { stroke: var(--pass); }
+/* 5 · a scenario */
+.msk-flow[data-step="4"] :is(.m-tomato, .msg, .w-http, .w-plain, .w-sasl) { opacity: 1; }
+.msk-flow[data-step="4"] path.w-http, .msk-flow[data-step="4"] path.w-sasl { stroke: var(--when); }
+.msk-flow[data-step="4"] path.w-plain { stroke: var(--then); }
+.msk-flow[data-step="4"] .pk-scenario { opacity: 1; }
+.msk-flow[data-step="4"] .m-tick { opacity: 1; }
+.msk-flow[data-step="4"] :is(.m-token, .m-sts, .m-policy) { opacity: 0.35; }
+/* 6 · wrong identity */
+.msk-flow[data-step="5"] :is(.ambient, .w-sasl) { opacity: 1; }
+.msk-flow[data-step="5"] path.w-sasl { stroke: var(--fail); }
+.msk-flow[data-step="5"] .pk-denied { opacity: 1; }
+.msk-flow[data-step="5"] .verdict.no { opacity: 1; }
+.msk-flow[data-step="5"] .creds { opacity: 0; } .msk-flow[data-step="5"] .unreachable { opacity: 1; }
+.msk-flow[data-step="5"] .sts-box { stroke: var(--fail); stroke-dasharray: 5 4; fill: var(--fail-bg); }
+.msk-flow[data-step="5"] .broker-box { stroke: var(--fail); fill: var(--fail-bg); }
+.msk-flow[data-step="5"] .token-box { stroke: var(--warn); }
+.msk-flow[data-step="5"] .m-policy { opacity: 0.6; }
+
 /* the annotated report */
 .meaning-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .meaning-file { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-3); }
@@ -454,7 +506,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .meaning-legend { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .flow .packets { display: none; }
+  .flow .packets, .flow .m-packets { display: none; }
   .flow *, .explainer * { transition: none !important; }
 }
 
@@ -530,3 +582,13 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .client-flow[data-step="4"] .c-send { opacity: 0.35; }
 .client-flow[data-step="4"] :is(.send-box) { stroke: var(--fail); stroke-dasharray: 4 3; fill: var(--fail-bg); }
 .client-flow[data-step="4"] .send-text { fill: var(--fail); text-decoration: line-through; }
+
+/* ─── code in several languages (shortcodes code-tabs, tab) ───────────────── */
+
+.code-tabs { margin: 18px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-1); }
+.code-tabs .lang-tabs { margin: 0; padding: 6px 6px 0; border-bottom: 1px solid var(--line); }
+.code-tabs .lang-tabs button { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.code-tabs .lang-panel > :first-child { margin-top: 0; }
+.code-tabs .lang-panel > :last-child { margin-bottom: 0; }
+.code-tabs .lang-panel .highlight pre, .code-tabs .lang-panel > pre { border: 0; border-radius: 0 0 10px 10px; }
+.code-tabs .lang-panel > p { margin: 12px 16px; font-size: 14.5px; color: var(--fg-2); }

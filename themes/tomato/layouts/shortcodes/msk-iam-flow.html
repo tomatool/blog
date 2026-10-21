@@ -1,0 +1,198 @@
+{{/* A step-through diagram of MSK IAM authentication: in production against
+     EKS, STS and MSK; under tomato against the aws resource's STS and the kafka
+     preset's AWS_MSK_IAM listener, including a service with the wrong identity. */}}
+{{ $id := printf "msk-%d" .Ordinal }}
+<figure class="explainer flow msk-flow" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 800 372" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">The service exchanges a web identity token for a role session at STS, signs an AWS_MSK_IAM handshake with it, and the broker lets the role's sessions in. Under tomato, the aws resource serves STS and the kafka preset's listener admits exactly the sessions of the configured role.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- tomato -->
+    <g class="part m-tomato">
+      <rect class="box" x="20" y="40" width="170" height="140" rx="10" />
+      <circle class="fruit" cx="42" cy="64" r="7" /><rect class="stem" x="39" y="53" width="6" height="5" rx="1.5" />
+      <text class="title" x="56" y="69">tomato run</text>
+      <text class="m-tick" x="34" y="100">✓</text><text class="sc-text" x="50" y="100">POST /orders</text>
+      <text class="m-tick" x="34" y="124">✓</text><text class="sc-text" x="50" y="124">receives from orders</text>
+      <text class="m-tick" x="34" y="148">✓</text><text class="sc-text" x="50" y="148">role was assumed</text>
+    </g>
+
+    <!-- the service -->
+    <g class="part m-app">
+      <rect class="box service-box" x="240" y="40" width="270" height="140" rx="10" />
+      <text class="title" x="256" y="65">orders</text>
+      <text class="muted" x="312" y="65">your service</text>
+      <text class="badge-text" x="256" y="86">Kafka client · AWS_MSK_IAM</text>
+      <rect class="env-box" x="250" y="96" width="250" height="74" rx="6" />
+      <text class="env-text" x="260" y="114">AWS_ROLE_ARN=<tspan class="env-val" data-field="roleEnv"></tspan></text>
+      <text class="env-text" x="260" y="131">AWS_WEB_IDENTITY_TOKEN_FILE</text>
+      <text class="env-text" x="260" y="148">AWS_ENDPOINT_URL_STS=<tspan class="env-val" data-field="stsEnv"></tspan></text>
+      <text class="env-text" x="260" y="165">KAFKA_BROKERS=<tspan class="env-val" data-field="brokers"></tspan></text>
+    </g>
+
+    <!-- the broker -->
+    <g class="part m-broker">
+      <rect class="box broker-box" x="560" y="40" width="220" height="140" rx="10" />
+      <text class="title" x="576" y="65" data-field="broker"></text>
+      <text class="muted" x="576" y="83" data-field="listener"></text>
+      <text class="verdict ok" x="576" y="108">✓ <tspan data-field="okWho"></tspan></text>
+      <text class="verdict no" x="576" y="108">✗ Access denied</text>
+      <text class="muted" x="576" y="138">topic orders</text>
+      <g class="msg">
+        <rect class="msg-box" x="576" y="146" width="188" height="22" rx="5" />
+        <text class="msg-text" x="586" y="161">ord-1 · {"status":"placed"}</text>
+      </g>
+    </g>
+
+    <!-- where the token comes from -->
+    <g class="part m-token">
+      <rect class="box token-box" x="20" y="240" width="170" height="100" rx="10" />
+      <text class="title" x="36" y="264">web identity token</text>
+      <text class="muted" x="36" y="282" data-field="tokenFrom"></text>
+      <g class="ambient">
+        <text class="amb-text" x="36" y="310">fallback identity:</text>
+        <text class="amb-key" x="36" y="327">TOMATOAMBFB4060D1171</text>
+      </g>
+    </g>
+
+    <!-- STS -->
+    <g class="part m-sts">
+      <rect class="box sts-box" x="240" y="240" width="270" height="100" rx="10" />
+      <text class="title" x="256" y="264" data-field="sts"></text>
+      <text class="muted" x="256" y="282" data-field="stsWhere"></text>
+      <text class="badge-text" x="256" y="306">AssumeRoleWithWebIdentity</text>
+      <text class="creds" x="256" y="326">→ AccessKeyId=<tspan data-field="key"></tspan></text>
+      <text class="unreachable" x="256" y="326">never asked: no role to assume</text>
+    </g>
+
+    <!-- who may connect -->
+    <g class="part m-policy">
+      <rect class="box policy-box" x="560" y="240" width="220" height="100" rx="10" />
+      <text class="title" x="576" y="264" data-field="policy"></text>
+      <text class="muted" x="576" y="286" data-field="policy1"></text>
+      <text class="muted" x="576" y="304" data-field="policy2"></text>
+      <text class="muted" x="576" y="322" data-field="policy3"></text>
+    </g>
+
+    <!-- wires -->
+    <path id="{{ $id }}-http" class="wire w-http" d="M190 100 H240" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label w-http" x="197" y="92">HTTP</text>
+    <path id="{{ $id }}-token" class="wire dashed w-creds" d="M190 290 C222 290 214 200 252 180" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-sts-down" class="wire w-creds" d="M350 180 V240" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-sts-up" class="wire w-creds" d="M400 240 V180" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-sasl" class="wire w-sasl" d="M510 110 H560" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label w-sasl" x="516" y="102">SASL</text>
+    <path class="wire w-policy" d="M670 180 V240" marker-end="url(#{{ $id }}-arrow)" />
+    <path id="{{ $id }}-plain" class="wire dashed w-plain" d="M670 40 V20 H105 V40" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label w-plain" x="250" y="14">the kafka resource reads orders on the plain listener</text>
+
+    <g class="m-packets pk-creds">
+      <circle r="4" class="packet"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-token" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="2.4s" begin="0.8s" repeatCount="indefinite"><mpath href="#{{ $id }}-sts-down" /></animateMotion></circle>
+      <circle r="4" class="packet key"><animateMotion dur="2.4s" begin="1.6s" repeatCount="indefinite"><mpath href="#{{ $id }}-sts-up" /></animateMotion></circle>
+    </g>
+    <g class="m-packets pk-sasl">
+      <circle r="4" class="packet key"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-sasl" /></animateMotion></circle>
+    </g>
+    <g class="m-packets pk-scenario">
+      <circle r="4" class="packet"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#{{ $id }}-http" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="1.8s" begin="0.5s" repeatCount="indefinite"><mpath href="#{{ $id }}-sasl" /></animateMotion></circle>
+      <circle r="4" class="packet read"><animateMotion dur="2.6s" begin="1s" repeatCount="indefinite"><mpath href="#{{ $id }}-plain" /></animateMotion></circle>
+    </g>
+    <g class="m-packets pk-denied">
+      <circle r="4" class="packet bad"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-sasl" /></animateMotion></circle>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · On AWS</button>
+      <button type="button" data-go="1">2 · Under tomato</button>
+      <button type="button" data-go="2">3 · Credentials</button>
+      <button type="button" data-go="3">4 · Handshake</button>
+      <button type="button" data-go="4">5 · A scenario</button>
+      <button type="button" data-go="5">6 · Wrong identity</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>On AWS</strong> the service has no keys of its own. EKS gives its pod a web identity token and a role (IRSA); the SDK trades the token at STS for a short-lived session, signs the Kafka handshake with it, and MSK lets it in if the role's IAM policy allows <code>kafka-cluster:Connect</code>.</p>
+      <p data-for="1"><strong>Under tomato</strong> every piece has a stand-in. The <code>aws</code> resource writes the token file, serves STS on localhost and puts both in the service's environment. The <code>kafka</code> preset with <code>auth: aws_msk_iam</code> adds a listener on 9098 that speaks the same handshake. The service's code and client settings stay as they are.</p>
+      <p data-for="2"><strong>Credentials.</strong> The SDK reads the token file and calls <code>AssumeRoleWithWebIdentity</code> at tomato's STS, which records the role and returns a session. Its access key id is derived from the role ARN, so it is the same on every run.</p>
+      <p data-for="3"><strong>Handshake.</strong> The client sends MSK's signed <code>kafka-cluster:Connect</code> payload. The listener reads the access key id out of it and lets it in only if it is a session of the role in <code>tomato.yml</code>: the kafka preset derives the same key from the same ARN, so the two agree without talking to each other.</p>
+      <p data-for="4"><strong>A scenario</strong> calls the service over HTTP, the service produces to <code>orders</code> over the IAM listener, and tomato's <code>kafka</code> resource reads the topic on the plain listener to check the message. The <code>aws</code> resource can also assert which role the service assumed.</p>
+      <p data-for="5"><strong>Wrong identity.</strong> When the pod is not given the role (the service account lost its annotation, say), the SDK's credential chain keeps looking and settles on another identity, like the EKS node's. With <code>ambient_identity: true</code> tomato leaves such an identity where the chain looks; it is not a session of the role, so the listener answers <code>Access denied</code>, as MSK would.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var LAST = 5;
+  var modes = {
+    aws: {
+      roleEnv: "…:role/orders", stsEnv: "(SDK default)", brokers: "b-1.<cluster>…:9098",
+      broker: "Amazon MSK", listener: "port 9098 · SASL_SSL", okWho: "role/orders may connect",
+      tokenFrom: "projected into the pod by EKS",
+      sts: "AWS STS", stsWhere: "sts.<region>.amazonaws.com", key: "ASIA… (a session)",
+      policy: "IAM policy of role/orders", policy1: "kafka-cluster:Connect",
+      policy2: "kafka-cluster:WriteData", policy3: "on the cluster and topic"
+    },
+    tomato: {
+      roleEnv: "…:role/orders", stsEnv: "127.0.0.1:…", brokers: "localhost:…",
+      broker: "kafka preset", listener: "port 9098 · SASL_PLAINTEXT", okWho: "a session of role/orders",
+      tokenFrom: "a file tomato wrote",
+      sts: "tomato's STS", stsWhere: "the aws resource, on 127.0.0.1", key: "TOMATOAE488A245AC1A8",
+      policy: "allowed access keys", policy1: "TOMATOAE488A245AC1A8",
+      policy2: "= sessions of role/orders,", policy3: "derived from tomato.yml"
+    }
+  };
+  var step = 0, timer = null;
+
+  function show(n) {
+    step = Math.max(0, Math.min(LAST, n));
+    root.dataset.step = step;
+    var mode = modes[step === 0 ? "aws" : "tomato"];
+    root.querySelectorAll("[data-field]").forEach(function (el) { el.textContent = mode[el.dataset.field]; });
+    if (step === LAST) root.querySelector("[data-field=roleEnv]").textContent = "(not set)";
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("[data-for]").forEach(function (p) { p.hidden = +p.dataset.for !== step; });
+  }
+  var touched = false; // once the reader drives it, it is theirs
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= LAST ? 0 : step);
+    timer = setInterval(function () { if (step >= LAST) stop(); else show(step + 1); }, 4800);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+
+  // Play on its own the first time it scrolls into view, and pause while it
+  // is out of view; not for readers who asked for less motion.
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/msk=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/msk=(\d)/);
+  show(m ? +m[1] : 0);
+})();
+</script>
