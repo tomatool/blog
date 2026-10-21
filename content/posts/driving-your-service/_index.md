@@ -31,6 +31,11 @@ The same loop for every client:
 | a web page | [`browser`](browser/) | `fills "New todo" with "…"`, `clicks "Add"` | what the page shows |
 | a command line | [`shell`](shell/) | `runs "todo add Buy milk"` | exit code, stdout, stderr, files |
 
+> **Name a client after the service it calls.** `"todos-client" sends …`
+> says who is being called; `"api" sends …` makes the reader open
+> `tomato.yml` to find out. The same goes for the rest of the suite:
+> `stripe-stub`, `todos-db`, `alice-browser`.
+
 {{< parts >}}
 
 ## The answer is half of it

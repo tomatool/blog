@@ -22,29 +22,29 @@ app:
     PRICES_URL: ws://localhost:9103/stream   # any path is accepted
 
 resources:
-  api:    { type: http, base_url: http://localhost:3000 }
-  prices: { type: websocket-server, options: { port: 9103 } }
+  shop-client:    { type: http, base_url: http://localhost:3000 }
+  prices-stub: { type: websocket-server, options: { port: 9103 } }
 ```
 
 ```gherkin
 Background:
-  Given "prices" on message "subscribe BTC" replies:
+  Given "prices-stub" on message "subscribe BTC" replies:
     """
     {"symbol": "BTC", "price": 64000}
     """
 
 Scenario: The service subscribes when it connects
-  Then "prices" has "1" connections
-  And "prices" received message "subscribe BTC"
+  Then "prices-stub" has "1" connections
+  And "prices-stub" received message "subscribe BTC"
 
 Scenario: The service keeps the latest price the feed pushes
-  Given "prices" has "1" connections
-  When "prices" broadcasts:
+  Given "prices-stub" has "1" connections
+  When "prices-stub" broadcasts:
     """
     {"symbol": "BTC", "price": 65000}
     """
-  And "api" sends "GET" to "/prices/BTC"
-  Then "api" response json "price" is "65000"
+  And "shop-client" sends "GET" to "/prices/BTC"
+  Then "shop-client" response json "price" is "65000"
 ```
 
 ## What it can do
@@ -64,7 +64,7 @@ forgetting its replies and messages. A service that keeps one long-lived
 connection must reconnect, and it does so a moment after the scenario starts.
 So:
 
-- **Wait for the connection before pushing.** `Given "prices" has "1"
+- **Wait for the connection before pushing.** `Given "prices-stub" has "1"
   connections` waits until the service is back. Broadcasting before that
   fails with "no clients are connected".
 - **That's a feature.** Real feeds drop connections too. Every scenario

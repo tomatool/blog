@@ -17,7 +17,7 @@ API.
 
 ```yaml
 resources:
-  shell:
+  todo-cli:
     type: shell
     options:
       env: { TODOS_API: http://localhost:3000 }   # what every command sees
@@ -25,17 +25,17 @@ resources:
 
 ```gherkin
 Scenario: A todo added from the command line
-  When "shell" runs "node cli.js add Buy milk"
-  Then "shell" succeeds
-  And "shell" stdout contains "Buy milk"
-  When "shell" runs "node cli.js list"
-  Then "shell" stdout contains "Buy milk"
+  When "todo-cli" runs "node cli.js add Buy milk"
+  Then "todo-cli" succeeds
+  And "todo-cli" stdout contains "Buy milk"
+  When "todo-cli" runs "node cli.js list"
+  Then "todo-cli" stdout contains "Buy milk"
 
 Scenario: A todo without a title is refused
-  When "shell" runs "node cli.js add"
-  Then "shell" exit code is "1"
-  And "shell" stderr contains "title is required"
-  And "shell" stdout is empty
+  When "todo-cli" runs "node cli.js add"
+  Then "todo-cli" exit code is "1"
+  And "todo-cli" stderr contains "title is required"
+  And "todo-cli" stdout is empty
 ```
 
 ## What it can do

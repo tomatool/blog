@@ -18,31 +18,31 @@ app:
   port: 3000
 
 resources:
-  api: { type: http, base_url: http://localhost:3000 }
+  todos-client: { type: http, base_url: http://localhost:3000 }
 ```
 
 ```gherkin
 Scenario: A todo is added
-  When "api" sends "POST" to "/api/todos" with json:
+  When "todos-client" sends "POST" to "/api/todos" with json:
     """
     {"title": "Buy milk"}
     """
-  Then "api" response status is "201"
-  And "api" response json contains:
+  Then "todos-client" response status is "201"
+  And "todos-client" response json contains:
     """
     {"title": "Buy milk", "done": false}
     """
-  And "api" response json "id" saved as "{{id}}"
-  When "api" sends "GET" to "/api/todos/{{id}}"
-  Then "api" response json "title" is "Buy milk"
+  And "todos-client" response json "id" saved as "{{id}}"
+  When "todos-client" sends "GET" to "/api/todos/{{id}}"
+  Then "todos-client" response json "title" is "Buy milk"
 
 Scenario: A todo needs a title
-  When "api" sends "POST" to "/api/todos" with json:
+  When "todos-client" sends "POST" to "/api/todos" with json:
     """
     {"title": "  "}
     """
-  Then "api" response status is "400"
-  And "api" response json "error" is "title is required"
+  Then "todos-client" response status is "400"
+  And "todos-client" response json "error" is "title is required"
 ```
 
 ## What it can do

@@ -30,27 +30,27 @@ or field fails at the step that has it.
 app:
   command: node app.js
   env:
-    USERS_ADDR: "{{.users.address}}"   # localhost:9102
+    USERS_ADDR: "{{.users-stub.address}}"   # localhost:9102
 
 resources:
-  api:   { type: http, base_url: http://localhost:3000 }
-  users: { type: grpc-server, options: { port: 9102, descriptor_set: proto/users.binpb } }
+  shop-client:   { type: http, base_url: http://localhost:3000 }
+  users-stub: { type: grpc-server, options: { port: 9102, descriptor_set: proto/users.binpb } }
 ```
 
 ```gherkin
 Scenario: A known user
-  Given "users" stub "users.v1.UserService/GetUser" with request json "id" "42" returns json:
+  Given "users-stub" stub "users.v1.UserService/GetUser" with request json "id" "42" returns json:
     """
     {"id": "42", "name": "Ada", "plan": "pro"}
     """
-  When "api" sends "GET" to "/users/42"
-  Then "api" response json "name" is "Ada"
-  And "users" last "users.v1.UserService/GetUser" request metadata "authorization" is "Bearer secret"
+  When "shop-client" sends "GET" to "/users/42"
+  Then "shop-client" response json "name" is "Ada"
+  And "users-stub" last "users.v1.UserService/GetUser" request metadata "authorization" is "Bearer secret"
 
 Scenario: An unknown user
-  Given "users" stub "users.v1.UserService/GetUser" returns status "NOT_FOUND" with message "no user 7"
-  When "api" sends "GET" to "/users/7"
-  Then "api" response status is "404"
+  Given "users-stub" stub "users.v1.UserService/GetUser" returns status "NOT_FOUND" with message "no user 7"
+  When "shop-client" sends "GET" to "/users/7"
+  Then "shop-client" response status is "404"
 ```
 
 ## What it can do

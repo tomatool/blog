@@ -27,10 +27,10 @@
     <!-- the client -->
     <g class="part c-client">
       <rect class="box client-box" x="250" y="40" width="250" height="210" rx="10" />
-      <text class="title" x="266" y="69" data-f="name">"api"</text>
-      <text class="muted" x="330" y="69" data-f="type">http client</text>
+      <text class="title" x="266" y="66" data-f="name">"todos-client"</text>
+      <text class="muted" x="266" y="82" data-f="type">http client</text>
       <g class="c-send">
-        <text class="muted" x="266" y="98">does</text>
+        <text class="muted" x="266" y="100">does</text>
         <rect class="send-box" x="262" y="104" width="226" height="44" rx="6" />
         <text class="send-text" x="272" y="122" data-f="send">POST /api/todos</text>
         <text class="send-sub" x="272" y="140" data-f="sendSub">{"title": "Buy milk"}</text>
@@ -104,16 +104,16 @@
 (function () {
   var root = document.getElementById("{{ $id }}");
   var kinds = {
-    http:    { name: '"api"', type: "http client", when: 'sends "POST" to …', then: 'response status is "201"',
+    http:    { name: '"todos-client"', type: "http client", when: 'sends "POST" to …', then: 'response status is "201"',
                send: "POST /api/todos", sendSub: '{"title": "Buy milk"}', answer: "201 Created", answerSub: '{"id": 1, "title": "Buy milk"}',
                who: "another service would", act: "it sends an HTTP request", ans: "a status, headers and a body", reset: "its headers and cookies" },
-    grpc:    { name: '"grpc"', type: "grpc client", when: 'calls "…/AddTodo" with:', then: "call succeeds",
+    grpc:    { name: '"todos-client"', type: "grpc client", when: 'calls "…/AddTodo" with:', then: "call succeeds",
                send: "todos.v1.TodoService/AddTodo", sendSub: '{"title": "Buy milk"}', answer: "OK", answerSub: '{"id": 1, "title": "Buy milk"}',
                who: "another service would", act: "it calls a method, found through the service's reflection", ans: "a message, or a status code", reset: "its metadata and last response" },
-    browser: { name: '"alice"', type: "browser · Chromium", when: 'clicks "Add"', then: 'sees "Water the …" within …',
+    browser: { name: '"alice-browser"', type: "browser · Chromium", when: 'clicks "Add"', then: 'sees "Water the …" within …',
                send: 'fills "New todo", clicks "Add"', sendSub: "in a real headless Chromium", answer: "the page shows", answerSub: "Water the tomatoes",
                who: "a person would", act: "it opens the page, fills in a field and clicks a button, found by their labels", ans: "what the page now shows", reset: "its page, cookies and storage" },
-    shell:   { name: '"shell"', type: "shell", when: 'runs "node cli.js add …"', then: 'stdout contains "Buy milk"',
+    shell:   { name: '"todo-cli"', type: "shell", when: 'runs "node cli.js add …"', then: 'stdout contains "Buy milk"',
                send: "$ node cli.js add Buy milk", sendSub: "a real process", answer: "exit 0", answerSub: "added #1: Buy milk",
                who: "a person at a terminal would, or a cron job", act: "it runs a command", ans: "an exit code, stdout and stderr", reset: "its environment and working directory" }
   };

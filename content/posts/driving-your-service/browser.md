@@ -17,20 +17,20 @@ containers:
   chrome: { preset: chromium }        # a headless Chromium
 
 resources:
-  alice: { type: browser, container: chrome, options: { base_url: http://localhost:3000 } }
+  alice-browser: { type: browser, container: chrome, options: { base_url: http://localhost:3000 } }
 ```
 
 ```gherkin
 Scenario: A todo added on the page shows up in the list
-  Given "alice" opens "/"
-  When "alice" fills "New todo" with "Water the tomatoes"
-  And "alice" clicks "Add"
-  Then "alice" sees "Water the tomatoes" within "3s"
+  Given "alice-browser" opens "/"
+  When "alice-browser" fills "New todo" with "Water the tomatoes"
+  And "alice-browser" clicks "Add"
+  Then "alice-browser" sees "Water the tomatoes" within "3s"
 
 Scenario: The page says why a todo was refused
-  Given "alice" opens "/"
-  When "alice" clicks "Add"
-  Then "alice" sees "title is required" within "3s"
+  Given "alice-browser" opens "/"
+  When "alice-browser" clicks "Add"
+  Then "alice-browser" sees "title is required" within "3s"
 ```
 
 The page this runs against has nothing special for tests:
@@ -67,7 +67,7 @@ a screen reader announces. So:
 
 - **After a click, wait.** Pages update asynchronously, so check an outcome
   with `sees "…" within "3s"`, not `sees "…"`.
-- **Two resources are two people.** `alice` and `bob` each get their own
+- **Two resources are two people.** `alice-browser` and `bob-browser` each get their own
   cookies and storage, in one Chromium: collaboration needs no special steps.
 - **`localhost` just works.** The page in the container reaches your service
   on your machine through a tunnel tomato opens, so cookies, CORS and secure

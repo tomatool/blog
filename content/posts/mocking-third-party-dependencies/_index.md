@@ -31,6 +31,10 @@ Four moves, the same for every protocol:
 | a gRPC service | [`grpc-server`](grpc/) | `{{.name.address}}` | `stub "pkg.Svc/Method" returns json:` | `received "pkg.Svc/Method"` |
 | a WebSocket feed | [`websocket-server`](websocket/) | `ws://localhost:<port>` | `on message "…" replies:` | `received message "…"` |
 
+> **Name a stub after what it stands in for.** `"stripe-stub" received …`
+> reads on its own, and never gets confused with the client that calls your
+> service, `"shop-client"`.
+
 {{< parts >}}
 
 ## Stub, not the real thing

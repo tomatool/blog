@@ -18,7 +18,7 @@
       <circle class="fruit" cx="42" cy="64" r="7" /><rect class="stem" x="39" y="53" width="6" height="5" rx="1.5" />
       <text class="title" x="56" y="69">tomato run</text>
       <text class="sc-text m-l1" x="36" y="104">Given … stub …</text>
-      <text class="sc-text m-l2" x="36" y="128" data-f="appCall">When "api" sends …</text>
+      <text class="sc-text m-l2" x="36" y="128" data-f="appCall">When … sends …</text>
       <text class="sc-text m-l3" x="36" y="152">Then … received …</text>
       <text class="muted" x="36" y="212">features/*.feature</text>
     </g>
@@ -103,15 +103,15 @@
 (function () {
   var root = document.getElementById("{{ $id }}");
   var kinds = {
-    http: { depName: "Stripe", depReal: "api.stripe.com", stubType: "http-server", env: "PAYMENTS_URL=",
+    http: { res: "stripe-stub", depName: "Stripe", depReal: "api.stripe.com", stubType: "http-server", env: "PAYMENTS_URL=",
             real: "https://api.stripe.com", stub: "http://localhost:9101", proto: "HTTP",
             rule: "POST /v1/charges → 201", journal: "POST /v1/charges {amount}",
             appCall: 'When … "/checkout"', resetExtra: "." },
-    grpc: { depName: "users", depReal: "users.internal:443", stubType: "grpc-server", env: "USERS_ADDR=",
+    grpc: { res: "users-stub", depName: "users", depReal: "users.internal:443", stubType: "grpc-server", env: "USERS_ADDR=",
             real: "users.internal:443", stub: "localhost:9102", proto: "gRPC",
             rule: "GetUser id=42 → Ada", journal: "GetUser {id: 42}",
             appCall: 'When … "/users/42"', resetExtra: "." },
-    ws:   { depName: "price feed", depReal: "stream.exchange.com", stubType: "websocket-server", env: "PRICES_URL=",
+    ws:   { res: "prices-stub", depName: "price feed", depReal: "stream.exchange.com", stubType: "websocket-server", env: "PRICES_URL=",
             real: "wss://stream.exchange.com", stub: "ws://localhost:9103", proto: "WS",
             rule: "on subscribe → 64000", journal: "subscribe BTC",
             appCall: 'When … "/prices/BTC"', resetExtra: ", and closes every open connection: your service has to reconnect." }
@@ -124,8 +124,8 @@
     root.querySelectorAll("[data-f]").forEach(function (el) {
       var f = el.dataset.f;
       if (f === "target") el.textContent = under ? k.stub : k.real;
-      else if (f === "depName") el.textContent = under && el.tagName !== "SPAN" ? k.stubType + " stub" : k.depName;
-      else if (f === "depKind") el.textContent = under ? "started by tomato" : k.depReal + " · not yours";
+      else if (f === "depName") el.textContent = under && el.tagName !== "SPAN" ? '"' + k.res + '"' : k.depName;
+      else if (f === "depKind") el.textContent = under ? k.stubType : k.depReal + " · not yours";
       else el.textContent = k[f];
     });
     root.querySelectorAll("[data-k]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.k === kind); });

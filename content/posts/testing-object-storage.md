@@ -77,14 +77,14 @@ app:
     STORAGE_BUCKET: billing
 
 resources:
-  storage:
+  invoices-storage:
     type: s3
     container: minio
     options:
       buckets: [billing]        # created before the first scenario
       reset_buckets: [billing]  # emptied before every scenario
 
-  api:
+  invoices-client:
     type: http-client
     base_url: "http://localhost:8097"
 ```
@@ -96,28 +96,28 @@ response. In the `s3` resource's steps a path is `bucket/key`:
 Feature: Invoices are stored in object storage
 
   Scenario: An issued invoice is written to the bucket
-    When "api" sends "POST" to "/invoices" with json:
+    When "invoices-client" sends "POST" to "/invoices" with json:
       """
       {"id": "inv-42", "amount": 1999}
       """
-    Then "api" response status is "201"
-    And "storage" object "billing/invoices/inv-42.json" should exist
-    And "storage" object "billing/invoices/inv-42.json" content type should be "application/json"
-    And "storage" object "billing/invoices/inv-42.json" content should match:
+    Then "invoices-client" response status is "201"
+    And "invoices-storage" object "billing/invoices/inv-42.json" should exist
+    And "invoices-storage" object "billing/invoices/inv-42.json" content type should be "application/json"
+    And "invoices-storage" object "billing/invoices/inv-42.json" content should match:
       """
       {"id": "inv-42", "amount": 1999, "status": "issued"}
       """
 
   Scenario: Each scenario starts with an empty bucket
-    Then "storage" bucket "billing" should be empty
+    Then "invoices-storage" bucket "billing" should be empty
 
   Scenario: A bad request writes nothing
-    When "api" sends "POST" to "/invoices" with json:
+    When "invoices-client" sends "POST" to "/invoices" with json:
       """
       {"amount": 1999}
       """
-    Then "api" response status is "400"
-    And "storage" bucket "billing" should be empty
+    Then "invoices-client" response status is "400"
+    And "invoices-storage" bucket "billing" should be empty
 ```
 
 ```text

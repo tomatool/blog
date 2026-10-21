@@ -38,7 +38,7 @@ before every scenario, which with WireMock you do yourself.
 {{% /side %}}
 {{% side label="tomato: a step" %}}
 ```gherkin
-Given "payments" stub "POST" "/v1/charges" returns "201" with json:
+Given "stripe-stub" stub "POST" "/v1/charges" returns "201" with json:
   """
   {"id": "ch_1"}
   """
@@ -52,37 +52,37 @@ Given "payments" stub "POST" "/v1/charges" returns "201" with json:
 app:
   command: node app.js
   env:
-    PAYMENTS_URL: "{{.payments.url}}"   # http://localhost:9101
+    PAYMENTS_URL: "{{.stripe-stub.url}}"   # http://localhost:9101
 
 resources:
-  api:      { type: http, base_url: http://localhost:3000 }
-  payments: { type: http-server, options: { port: 9101 } }
+  shop-client:      { type: http, base_url: http://localhost:3000 }
+  stripe-stub: { type: http-server, options: { port: 9101 } }
 ```
 
 ```gherkin
 Scenario: A successful charge
-  Given "payments" stub "POST" "/v1/charges" returns "201" with json:
+  Given "stripe-stub" stub "POST" "/v1/charges" returns "201" with json:
     """
     {"id": "ch_1", "status": "succeeded"}
     """
-  When "api" sends "POST" to "/checkout" with json:
+  When "shop-client" sends "POST" to "/checkout" with json:
     """
     {"amount": 1999}
     """
-  Then "api" response status is "201"
-  And "payments" received "POST" "/v1/charges" with header "Authorization" "Bearer sk_test_123"
-  And "payments" last "POST" "/v1/charges" request json contains:
+  Then "shop-client" response status is "201"
+  And "stripe-stub" received "POST" "/v1/charges" with header "Authorization" "Bearer sk_test_123"
+  And "stripe-stub" last "POST" "/v1/charges" request json contains:
     """
     {"amount": 1999, "currency": "eur"}
     """
 
 Scenario: The provider is down
-  Given "payments" refuses connections
-  When "api" sends "POST" to "/checkout" with json:
+  Given "stripe-stub" refuses connections
+  When "shop-client" sends "POST" to "/checkout" with json:
     """
     {"amount": 1999}
     """
-  Then "api" response status is "503"
+  Then "shop-client" response status is "503"
 ```
 
 ## What it can do
@@ -98,7 +98,7 @@ Scenario: The provider is down
 
 ## Notes
 
-- **Give it a fixed port.** `{{.payments.url}}` needs one to resolve.
+- **Give it a fixed port.** `{{.stripe-stub.url}}` needs one to resolve.
 - **A request no stub matches gets a 404** that says so, which usually means a
   wrong path in the stub or in the service.
 - **The service runs as a process** (`app.command`) for this. Services tomato

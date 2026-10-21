@@ -27,31 +27,31 @@ new ReflectionService(packageDefinition).addToServer(server)   // Node.js, @grpc
 
 ```yaml
 resources:
-  grpc: { type: grpc, address: localhost:50051 }
+  todos-client: { type: grpc, address: localhost:50051 }
 ```
 
 ```gherkin
 Scenario: The service describes itself
-  Then "grpc" exposes service "todos.v1.TodoService"
-  And "grpc" service "todos.v1.TodoService" has method "AddTodo"
+  Then "todos-client" exposes service "todos.v1.TodoService"
+  And "todos-client" service "todos.v1.TodoService" has method "AddTodo"
 
 Scenario: A todo is added
-  When "grpc" calls "todos.v1.TodoService/AddTodo" with:
+  When "todos-client" calls "todos.v1.TodoService/AddTodo" with:
     """
     {"title": "Buy milk"}
     """
-  Then "grpc" call succeeds
-  And "grpc" response json "title" is "Buy milk"
-  And "grpc" response json "done" is "false"
+  Then "todos-client" call succeeds
+  And "todos-client" response json "title" is "Buy milk"
+  And "todos-client" response json "done" is "false"
 
 Scenario: A todo needs a title
-  When "grpc" calls "todos.v1.TodoService/AddTodo" with:
+  When "todos-client" calls "todos.v1.TodoService/AddTodo" with:
     """
     {"title": ""}
     """
-  Then "grpc" call fails
-  And "grpc" response status is "INVALID_ARGUMENT"
-  And "grpc" response error contains "title is required"
+  Then "todos-client" call fails
+  And "todos-client" response status is "INVALID_ARGUMENT"
+  And "todos-client" response error contains "title is required"
 ```
 
 ## What it can do
