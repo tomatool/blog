@@ -140,16 +140,39 @@
     } else light(order.length);
     if (step === 4) counters.forEach(function (c) { if (!c.classList.contains("lit")) c.classList.add("gap"); });
   }
+  var touched = false; // once the reader drives it, it is theirs
   function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
-  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { stop(); show(+b.dataset.go); }); });
-  root.querySelector("[data-prev]").addEventListener("click", function () { stop(); show(step - 1); });
-  root.querySelector("[data-next]").addEventListener("click", function () { stop(); show(step + 1); });
-  root.querySelector("[data-play]").addEventListener("click", function (e) {
-    if (timer) return stop();
-    e.currentTarget.textContent = "❚❚ Pause";
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
     show(step >= 4 ? 0 : step);
     timer = setInterval(function () { if (step >= 4) stop(); else show(step + 1); }, 3600);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () {
+    touched = true;
+    if (timer) stop(); else play();
   });
+
+  // Play on its own the first time it scrolls into view, and pause while it
+  // is out of view; not for readers who asked for less motion.
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var played = false;
+  if ("IntersectionObserver" in window && !calm && !/flow=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) {
+          if (!played) { played = true; show(0); }
+          play();
+        } else if (!e.isIntersecting && timer && !touched) {
+          stop();
+        }
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
   var m = location.search.match(/flow=(\d)/);
   show(m ? +m[1] : 0);
 })();
