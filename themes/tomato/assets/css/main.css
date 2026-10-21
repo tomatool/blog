@@ -457,3 +457,47 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .flow .packets { display: none; }
   .flow *, .explainer * { transition: none !important; }
 }
+
+/* the third-party stub flow (shortcode mock-flow) */
+.mock-flow .env-val { fill: var(--arg); font-size: 11.5px; }
+.mock-flow .rule-box { fill: color-mix(in oklch, var(--given) 12%, var(--bg-1)); stroke: var(--given); }
+.mock-flow .rule-text { fill: var(--given); font-size: 11px; }
+.mock-flow .journal-box { fill: var(--pass-bg); stroke: var(--pass); }
+.mock-flow .journal-text { fill: var(--pass); font-size: 11px; }
+.mock-flow .packet.ctl { fill: var(--then); }
+.mock-flow .ctl-packets { opacity: 0; transition: opacity 0.3s; }
+.mock-flow .dep-box, .mock-flow .env-box, .mock-flow .rule-box, .mock-flow .journal-box { transition: fill 0.3s, stroke 0.3s, opacity 0.3s; }
+.mock-flow :is(.m-tomato, .m-in, .m-ctl, .m-rule, .m-journal) { opacity: 0.12; transition: opacity 0.4s; }
+.mock-flow .sc-text { transition: fill 0.3s; }
+
+.mock-flow[data-step="0"] .dep-box { stroke: var(--fail); }
+.mock-flow[data-step="0"] .m-dep .title { fill: var(--fail); }
+.mock-flow[data-step="0"] .packets { opacity: 1; }
+.mock-flow[data-step="0"] .packets circle:first-child { display: none; }
+.mock-flow:not([data-step="0"]) .m-tomato { opacity: 1; }
+.mock-flow:not([data-step="0"]) .dep-box { stroke: var(--given); stroke-dasharray: 5 4; fill: color-mix(in oklch, var(--given) 8%, var(--bg-2)); }
+.mock-flow[data-step="1"] .env-box { stroke: var(--arg); }
+.mock-flow:is([data-step="2"], [data-step="3"], [data-step="4"]) .m-rule { opacity: 1; }
+.mock-flow[data-step="2"] :is(.m-ctl) { opacity: 1; }
+.mock-flow[data-step="2"] .ctl-packets { opacity: 1; }
+.mock-flow[data-step="2"] .m-l1 { fill: var(--given); }
+.mock-flow[data-step="3"] :is(.m-in, .m-journal) { opacity: 1; }
+.mock-flow[data-step="3"] .packets { opacity: 1; }
+.mock-flow[data-step="3"] .m-in.wire, .mock-flow[data-step="3"] .wire:not(.m-ctl) { stroke: var(--when); }
+.mock-flow[data-step="3"] .m-l2 { fill: var(--when); }
+.mock-flow[data-step="4"] :is(.m-journal, .m-ctl, .m-in) { opacity: 1; }
+.mock-flow[data-step="4"] .ctl-packets { opacity: 1; }
+.mock-flow[data-step="4"] .wire.m-ctl { stroke: var(--then); }
+.mock-flow[data-step="4"] .m-l3 { fill: var(--then); }
+.mock-flow[data-step="4"] .journal-box { stroke-width: 2; }
+.mock-flow[data-step="5"] :is(.m-rule, .m-journal) { opacity: 0.35; }
+.mock-flow[data-step="5"] :is(.rule-box, .journal-box) { stroke: var(--fail); stroke-dasharray: 4 3; fill: var(--fail-bg); }
+.mock-flow[data-step="5"] :is(.rule-text, .journal-text) { fill: var(--fail); text-decoration: line-through; }
+.kinds { margin: 0 0 10px; }
+.kinds button[aria-pressed="true"] { color: var(--given); border-color: var(--given); }
+
+/* two code blocks to compare (WireMock mapping, then the tomato step) */
+.side-by-side { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 18px 0; }
+.side-by-side > div { min-width: 0; }
+.side-by-side .label { font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); margin-bottom: 4px; }
+.side-by-side .highlight, .side-by-side pre { margin: 0; }

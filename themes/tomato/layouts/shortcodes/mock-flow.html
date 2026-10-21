@@ -1,0 +1,168 @@
+{{/* How a stub stands in for a third party, step by step.
+     {{< mock-flow >}} lets the reader switch protocol; {{< mock-flow kind="grpc" >}} fixes it. */}}
+{{ $id := printf "mock-%d" .Ordinal }}
+{{ $fixed := .Get "kind" }}
+<figure class="explainer flow mock-flow" id="{{ $id }}" data-step="0" data-kind="{{ $fixed | default "http" }}">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 330" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">tomato starts a stub in place of the third party, points the service at it, tells the stub what to answer, and checks what the service sent it.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- tomato -->
+    <g class="part m-tomato">
+      <rect class="box" x="20" y="40" width="180" height="190" rx="10" />
+      <circle class="fruit" cx="42" cy="64" r="7" /><rect class="stem" x="39" y="53" width="6" height="5" rx="1.5" />
+      <text class="title" x="56" y="69">tomato run</text>
+      <text class="sc-text m-l1" x="36" y="104">Given … stub …</text>
+      <text class="sc-text m-l2" x="36" y="128" data-f="appCall">When "api" sends …</text>
+      <text class="sc-text m-l3" x="36" y="152">Then … received …</text>
+      <text class="muted" x="36" y="212">features/*.feature</text>
+    </g>
+
+    <!-- the service -->
+    <g class="part m-app">
+      <rect class="box" x="260" y="40" width="240" height="190" rx="10" />
+      <text class="title" x="276" y="69">shop</text>
+      <text class="muted" x="318" y="69">your service</text>
+      <text class="badge-text" x="276" y="96">same code, either way</text>
+      <rect class="env-box" x="272" y="114" width="216" height="58" rx="6" />
+      <text class="env-text" x="284" y="136" data-f="env">PAYMENTS_URL=</text>
+      <text class="env-val" x="284" y="158" data-f="target">https://api.stripe.com</text>
+    </g>
+
+    <!-- the third party, or its stub -->
+    <g class="part m-dep">
+      <rect class="box dep-box" x="560" y="40" width="200" height="190" rx="10" />
+      <text class="title" x="576" y="69" data-f="depName">Stripe</text>
+      <text class="muted" x="576" y="87" data-f="depKind">not yours</text>
+      <g class="m-rule">
+        <text class="muted" x="576" y="116">answers</text>
+        <rect class="rule-box" x="572" y="122" width="176" height="24" rx="5" />
+        <text class="rule-text" x="580" y="138" data-f="rule">POST /v1/charges → 201</text>
+      </g>
+      <g class="m-journal">
+        <text class="muted" x="576" y="170">received</text>
+        <rect class="journal-box" x="572" y="176" width="176" height="24" rx="5" />
+        <text class="journal-text" x="580" y="192" data-f="journal">POST /v1/charges</text>
+      </g>
+    </g>
+
+    <!-- traffic -->
+    <path id="{{ $id }}-in" class="wire m-in" d="M200 128 H260" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label m-in" x="207" y="120">HTTP</text>
+    <path id="{{ $id }}-out" class="wire m-out" d="M500 143 H560" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label" x="506" y="135" data-f="proto">HTTP</text>
+    <path id="{{ $id }}-ctl" class="wire dashed m-ctl" d="M110 230 V286 H660 V230" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label m-ctl" x="248" y="278" data-f="ctl">the scenario sets the answer, then reads what arrived</text>
+    <g class="packets">
+      <circle r="4" class="packet"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#{{ $id }}-in" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="1.6s" begin="0.5s" repeatCount="indefinite"><mpath href="#{{ $id }}-out" /></animateMotion></circle>
+    </g>
+    <g class="ctl-packets">
+      <circle r="4" class="packet ctl"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-ctl" /></animateMotion></circle>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    {{ if not $fixed }}
+      <div class="providers kinds">
+        <button type="button" data-k="http">HTTP</button>
+        <button type="button" data-k="grpc">gRPC</button>
+        <button type="button" data-k="ws">WebSocket</button>
+      </div>
+    {{ end }}
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · Production</button>
+      <button type="button" data-go="1">2 · Point</button>
+      <button type="button" data-go="2">3 · Arrange</button>
+      <button type="button" data-go="3">4 · Act</button>
+      <button type="button" data-go="4">5 · Assert</button>
+      <button type="button" data-go="5">6 · Reset</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>In production</strong> the service calls a dependency you don't run: <span data-f="depName">Stripe</span>. You can't make it fail on demand, and you can't ask it what your service sent.</p>
+      <p data-for="1"><strong>Point.</strong> tomato starts a <code data-f="stubType">http-server</code> stub and hands the service its address in the same variable. The service's code doesn't change.</p>
+      <p data-for="2"><strong>Arrange.</strong> A <code>Given</code> step tells the stub what to answer: a success, an error, a delay, a refused connection.</p>
+      <p data-for="3"><strong>Act.</strong> The scenario calls your service; your service calls the stub, which answers as told and remembers the call.</p>
+      <p data-for="4"><strong>Assert.</strong> <code>Then</code> steps check your service's answer <em>and</em> what it sent the stub: the path, headers, body, metadata, messages.</p>
+      <p data-for="5"><strong>Reset.</strong> Before the next scenario the stub forgets its answers and what it received<span data-f="resetExtra">.</span> Scenarios never see each other's stubs.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var kinds = {
+    http: { depName: "Stripe", depReal: "api.stripe.com", stubType: "http-server", env: "PAYMENTS_URL=",
+            real: "https://api.stripe.com", stub: "http://localhost:9101", proto: "HTTP",
+            rule: "POST /v1/charges → 201", journal: "POST /v1/charges {amount}",
+            appCall: 'When … "/checkout"', resetExtra: "." },
+    grpc: { depName: "users", depReal: "users.internal:443", stubType: "grpc-server", env: "USERS_ADDR=",
+            real: "users.internal:443", stub: "localhost:9102", proto: "gRPC",
+            rule: "GetUser id=42 → Ada", journal: "GetUser {id: 42}",
+            appCall: 'When … "/users/42"', resetExtra: "." },
+    ws:   { depName: "price feed", depReal: "stream.exchange.com", stubType: "websocket-server", env: "PRICES_URL=",
+            real: "wss://stream.exchange.com", stub: "ws://localhost:9103", proto: "WS",
+            rule: "on subscribe → 64000", journal: "subscribe BTC",
+            appCall: 'When … "/prices/BTC"', resetExtra: ", and closes every open connection: your service has to reconnect." }
+  };
+  var kind = root.dataset.kind, step = 0, timer = null;
+
+  function fill() {
+    var k = kinds[kind], under = step > 0;
+    root.dataset.kind = kind;
+    root.querySelectorAll("[data-f]").forEach(function (el) {
+      var f = el.dataset.f;
+      if (f === "target") el.textContent = under ? k.stub : k.real;
+      else if (f === "depName") el.textContent = under && el.tagName !== "SPAN" ? k.stubType + " stub" : k.depName;
+      else if (f === "depKind") el.textContent = under ? "started by tomato" : k.depReal + " · not yours";
+      else el.textContent = k[f];
+    });
+    root.querySelectorAll("[data-k]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.k === kind); });
+  }
+  function show(n) {
+    step = Math.max(0, Math.min(5, n));
+    root.dataset.step = step;
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
+    fill();
+  }
+  var touched = false;
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= 5 ? 0 : step);
+    timer = setInterval(function () { if (step >= 5) stop(); else show(step + 1); }, 3800);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelectorAll("[data-k]").forEach(function (b) { b.addEventListener("click", function () { manual(); kind = b.dataset.k; show(step); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/mock=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/mock=(\d)/), k = location.search.match(/kind=(\w+)/);
+  if (k && kinds[k[1]] && !{{ $fixed | jsonify | safeJS }}) kind = k[1];
+  show(m ? +m[1] : 0);
+})();
+</script>
