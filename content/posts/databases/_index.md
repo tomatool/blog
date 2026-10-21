@@ -44,6 +44,9 @@ and the best place is **the way production does it**:
    your service has started, so only for a service that doesn't need the
    tables to boot.
 
+[Migrations](migrations/) shows each with real tools: golang-migrate, Flyway,
+Alembic, node-pg-migrate and dbmate, a start script, and init SQL.
+
 ## Seeding: a scenario builds its own state
 
 A scenario that needs data declares it, in the scenario or its `Background`,
@@ -84,9 +87,9 @@ It's an escape hatch, not a pattern:
 
 - **Never exclude a table a scenario writes to.** What one scenario adds, the
   next one sees: the flakiness the reset exists to prevent.
-- **A migration tool tomato doesn't know** (node-pg-migrate's `pgmigrations`,
-  Prisma's `_prisma_migrations`) needs its table in `exclude`, or the history
-  is emptied after the first scenario.
+- **A migration tool tomato doesn't know** (Alembic, Django, Prisma, Knex,
+  node-pg-migrate, sqlx…) needs its history table in `exclude`, or the history
+  is emptied after the first scenario: [the table](migrations/#keep-the-history-table).
 - **Prefer a seed over an exclude.** Data a scenario needs belongs in its
   `Background`, where a reader can see it.
 
