@@ -1,48 +1,54 @@
-{{/* An annotated report: what each kind of line in a coverage report means. */}}
-<figure class="explainer meaning">
-  <div class="meaning-head">
-    <div>
-      <div class="meaning-file">orders/api.go · <code>createOrder</code></div>
-      <div class="meaning-score"><strong>12 of 13</strong> lines ran · <strong>92%</strong></div>
-    </div>
-    <div class="meaning-bar" aria-hidden="true">
-      <span class="seg ran" style="flex: 11"></span><span class="seg blind" style="flex: 1"></span><span class="seg gap" style="flex: 1"></span>
-    </div>
-  </div>
-
-  <div class="meaning-code" role="table" aria-label="The handler, line by line, with what the coverage report says about each line">
-    {{ $lines := slice
-      (dict "n" 1 "k" "" "code" `<span class="kw">func</span> <span class="fn">createOrder</span>(w, r) {`)
-      (dict "n" 2 "k" "ran" "code" `  req, err := decode(r.Body)`)
-      (dict "n" 3 "k" "ran" "code" `  <span class="kw">if</span> err != <span class="kw">nil</span> {`)
-      (dict "n" 4 "k" "ran" "code" `    <span class="kw">return</span> reply(w, <span class="num">400</span>, <span class="str">"bad body"</span>)` "note" "malformed body")
-      (dict "n" 5 "k" "" "code" `  }`)
-      (dict "n" 6 "k" "ran" "code" `  p, err := catalog.GetProduct(req.SKU)`)
-      (dict "n" 7 "k" "ran" "code" `  <span class="kw">if</span> status.Code(err) == codes.NotFound {`)
-      (dict "n" 8 "k" "ran" "code" `    <span class="kw">return</span> reply(w, <span class="num">422</span>, <span class="str">"unknown product"</span>)` "note" "unknown product")
-      (dict "n" 9 "k" "" "code" `  }`)
-      (dict "n" 10 "k" "ran" "code" `  <span class="kw">if</span> err != <span class="kw">nil</span> {`)
-      (dict "n" 11 "k" "ran" "code" `    <span class="kw">return</span> reply(w, <span class="num">503</span>, <span class="str">"catalog is down"</span>)` "note" "catalog refuses connections")
-      (dict "n" 12 "k" "" "code" `  }`)
-      (dict "n" 13 "k" "ran" "code" `  order := newOrder(req, p)`)
-      (dict "n" 14 "k" "ran" "code" `  <span class="kw">if</span> err := db.Insert(order); err != <span class="kw">nil</span> {`)
-      (dict "n" 15 "k" "gap" "code" `    <span class="kw">return</span> reply(w, <span class="num">500</span>, <span class="str">"could not store"</span>)` "note" "No scenario makes the database fail. A missing scenario: stop Postgres with tomato's lifecycle resource.")
-      (dict "n" 16 "k" "" "code" `  }`)
-      (dict "n" 17 "k" "blind" "code" `  events.Publish(<span class="str">"orders.created"</span>, order)` "note" "Ran, so it counts as covered. But no step checks the event: drop this line and every scenario still passes.")
-      (dict "n" 18 "k" "ran" "code" `  <span class="kw">return</span> reply(w, <span class="num">201</span>, order)` "note" "an order is placed")
-      (dict "n" 19 "k" "" "code" `}`)
-    }}
-    {{ range $lines }}
-      <div class="mline {{ .k }}" role="row">
-        <span class="mgut" role="cell">{{ .n }}</span>
-        <span class="mmark" role="cell" aria-label="{{ with .k }}{{ if eq . "ran" }}ran{{ else if eq . "gap" }}never ran{{ else }}ran, not checked{{ end }}{{ end }}">{{ with .k }}{{ if eq . "ran" }}✓{{ else if eq . "gap" }}✗{{ else }}!{{ end }}{{ end }}</span>
-        {{/* Indent with CSS: the HTML minifier collapses leading spaces. */}}
-        {{ $text := strings.TrimLeft " " .code }}
-        <span class="mcode" role="cell" style="--ind: {{ sub (len .code) (len $text) }}">{{ $text | safeHTML }}</span>
-        {{ with .note }}<span class="mnote" role="cell">{{ . }}</span>{{ end }}
-      </div>
+{{/* An annotated report, per language: what each kind of line in a coverage
+     report means. The code is in data/coverage_example.yaml. */}}
+{{ $data := hugo.Data.coverage_example }}
+{{ $id := printf "meaning-%d" .Ordinal }}
+<figure class="explainer meaning" id="{{ $id }}">
+  <div class="lang-tabs" role="tablist" aria-label="Language">
+    {{ range $i, $l := $data.languages }}
+      <button type="button" role="tab" id="{{ $id }}-tab-{{ $l.id }}" aria-controls="{{ $id }}-{{ $l.id }}" aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}" data-lang="{{ $l.id }}">{{ $l.name }}</button>
     {{ end }}
   </div>
+
+  {{ range $i, $l := $data.languages }}
+    {{ $total := 0 }}{{ $ran := 0 }}{{ $blind := 0 }}{{ $gap := 0 }}
+    {{ range $l.lines }}
+      {{ $k := index . 0 }}
+      {{ if $k }}{{ $total = add $total 1 }}{{ end }}
+      {{ if eq $k "ran" }}{{ $ran = add $ran 1 }}{{ end }}
+      {{ if eq $k "blind" }}{{ $blind = add $blind 1 }}{{ end }}
+      {{ if eq $k "gap" }}{{ $gap = add $gap 1 }}{{ end }}
+    {{ end }}
+    {{ $kw := printf `\b(%s)\b` $l.keywords }}
+    <div class="lang-panel" role="tabpanel" id="{{ $id }}-{{ $l.id }}" aria-labelledby="{{ $id }}-tab-{{ $l.id }}" data-lang="{{ $l.id }}"{{ if ne $i 0 }} hidden{{ end }}>
+      <div class="meaning-head">
+        <div>
+          <div class="meaning-file">{{ $l.file }} · <code>{{ $l.fn }}</code></div>
+          <div class="meaning-score"><strong>{{ add $ran $blind }} of {{ $total }}</strong> lines ran · <strong>{{ math.Round (div (mul (add $ran $blind) 100.0) $total) }}%</strong></div>
+        </div>
+        <div class="meaning-bar" aria-hidden="true">
+          <span class="seg ran" style="flex: {{ $ran }}"></span><span class="seg blind" style="flex: {{ $blind }}"></span><span class="seg gap" style="flex: {{ $gap }}"></span>
+        </div>
+      </div>
+
+      <div class="meaning-code" role="table" aria-label="{{ $l.name }}: the handler, line by line, with what the coverage report says about each line">
+        {{ range $n, $line := $l.lines }}
+          {{ $k := index $line 0 }}{{ $note := index $line 1 }}{{ $code := index $line 2 }}
+          {{ $text := strings.TrimLeft " " $code }}
+          {{/* Colour: keywords, then strings, then numbers. Indent with CSS: the HTML minifier collapses leading spaces. */}}
+          {{ $html := htmlEscape $text }}
+          {{ $html = replaceRE $kw `<span class="kw">$1</span>` $html }}
+          {{ $html = replaceRE `(&#34;.*?&#34;)` `<span class="str">$1</span>` $html }}
+          {{ $html = replaceRE `([(, ])(\d{3})\b` `$1<span class="num">$2</span>` $html }}
+          <div class="mline {{ $k }}" role="row">
+            <span class="mgut" role="cell">{{ add $n 1 }}</span>
+            <span class="mmark" role="cell">{{ if eq $k "ran" }}✓{{ else if eq $k "gap" }}✗{{ else if eq $k "blind" }}!{{ end }}</span>
+            <span class="mcode" role="cell" style="--ind: {{ sub (len $code) (len $text) }}">{{ $html | safeHTML }}</span>
+            {{ with $note }}<span class="mnote" role="cell">{{ index $data.notes . }}</span>{{ end }}
+          </div>
+        {{ end }}
+      </div>
+    </div>
+  {{ end }}
 
   <div class="meaning-legend">
     <div class="leg ran">
@@ -67,3 +73,32 @@
     <span class="chip-x">generated & vendored code</span>
   </div>
 </figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var tabs = Array.prototype.slice.call(root.querySelectorAll("[role=tab]"));
+  function pick(lang, focus) {
+    var found = tabs.some(function (t) { return t.dataset.lang === lang; });
+    if (!found) return;
+    tabs.forEach(function (t) {
+      var on = t.dataset.lang === lang;
+      t.setAttribute("aria-selected", on);
+      t.tabIndex = on ? 0 : -1;
+      if (on && focus) t.focus();
+    });
+    root.querySelectorAll(".lang-panel").forEach(function (p) { p.hidden = p.dataset.lang !== lang; });
+    try { localStorage.setItem("lang", lang); } catch (e) {}
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { pick(t.dataset.lang); });
+    t.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) pick(tabs[(i + d + tabs.length) % tabs.length].dataset.lang, true);
+    });
+  });
+  var saved = null;
+  try { saved = localStorage.getItem("lang"); } catch (e) {}
+  var m = location.search.match(/lang=(\w+)/);
+  pick((m && m[1]) || saved || tabs[0].dataset.lang);
+})();
+</script>

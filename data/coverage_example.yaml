@@ -1,0 +1,132 @@
+# The same handler in each language, line by line, as a coverage report reads
+# it after the demo's scenarios. kind: ran | gap | blind | "" (not a statement).
+# note: a key of notes below, shown beside the line.
+notes:
+  malformed: malformed body
+  unknown: unknown product
+  down: catalog refuses connections
+  placed: an order is placed
+  gap: "No scenario makes the database fail. A missing scenario: stop Postgres with tomato's lifecycle resource."
+  blind: "Ran, so it counts as covered. But no step checks the event: drop this line and every scenario still passes."
+
+languages:
+  - id: go
+    name: Go
+    file: orders/api.go
+    fn: createOrder
+    keywords: func|if|return|nil
+    lines:
+      - ["", "", 'func createOrder(w, r) {']
+      - [ran, "", '  req, err := decode(r.Body)']
+      - [ran, "", '  if err != nil {']
+      - [ran, malformed, '    return reply(w, 400, "bad body")']
+      - ["", "", '  }']
+      - [ran, "", '  p, err := catalog.GetProduct(req.SKU)']
+      - [ran, "", '  if status.Code(err) == codes.NotFound {']
+      - [ran, unknown, '    return reply(w, 422, "unknown product")']
+      - ["", "", '  }']
+      - [ran, "", '  if err != nil {']
+      - [ran, down, '    return reply(w, 503, "catalog is down")']
+      - ["", "", '  }']
+      - [ran, "", '  order := newOrder(req, p)']
+      - [ran, "", '  if err := db.Insert(order); err != nil {']
+      - [gap, gap, '    return reply(w, 500, "could not store")']
+      - ["", "", '  }']
+      - [blind, blind, '  events.Publish("orders.created", order)']
+      - [ran, placed, '  return reply(w, 201, order)']
+      - ["", "", '}']
+
+  - id: rust
+    name: Rust
+    file: src/orders.rs
+    fn: create_order
+    keywords: async|fn|let|match|if|return|await|Ok|Err
+    lines:
+      - ["", "", 'async fn create_order(body: Bytes) -> Response {']
+      - [ran, "", '  let req = match serde_json::from_slice(&body) {']
+      - [ran, "", '    Ok(req) => req,']
+      - [ran, malformed, '    Err(_) => return reply(400, "bad body"),']
+      - ["", "", '  };']
+      - [ran, "", '  let product = match catalog.get_product(&req.sku).await {']
+      - [ran, "", '    Ok(p) => p,']
+      - [ran, unknown, '    Err(s) if s.code() == NotFound => return reply(422, "unknown product"),']
+      - [ran, down, '    Err(_) => return reply(503, "catalog is down"),']
+      - ["", "", '  };']
+      - [ran, "", '  let order = Order::new(req, product);']
+      - [ran, "", '  if db.insert(&order).await.is_err() {']
+      - [gap, gap, '    return reply(500, "could not store");']
+      - ["", "", '  }']
+      - [blind, blind, '  events.publish("orders.created", &order).await;']
+      - [ran, placed, '  reply(201, order)']
+      - ["", "", '}']
+
+  - id: kotlin
+    name: Kotlin
+    file: Orders.kt
+    fn: createOrder
+    keywords: fun|val|try|catch|return|when|else
+    lines:
+      - ["", "", 'fun createOrder(call: Request): Response {']
+      - [ran, "", '  val req = try { json.decode<OrderRequest>(call.body) }']
+      - [ran, malformed, '    catch (e: SerializationException) { return reply(400, "bad body") }']
+      - [ran, "", '  val product = try { catalog.getProduct(req.sku) }']
+      - [ran, "", '    catch (e: StatusException) {']
+      - [ran, "", '      return when (e.status.code) {']
+      - [ran, unknown, '        NOT_FOUND -> reply(422, "unknown product")']
+      - [ran, down, '        else -> reply(503, "catalog is down")']
+      - ["", "", '      }']
+      - ["", "", '    }']
+      - [ran, "", '  val order = Order(req, product)']
+      - [ran, "", '  try { db.insert(order) }']
+      - [gap, gap, '    catch (e: SQLException) { return reply(500, "could not store") }']
+      - [blind, blind, '  events.publish("orders.created", order)']
+      - [ran, placed, '  return reply(201, order)']
+      - ["", "", '}']
+
+  - id: python
+    name: Python
+    file: orders/api.py
+    fn: create_order
+    keywords: async|def|try|except|as|if|return|await
+    lines:
+      - ["", "", 'async def create_order(request):']
+      - [ran, "", '    try:']
+      - [ran, "", '        req = OrderRequest.parse(await request.body())']
+      - [ran, "", '    except ValidationError:']
+      - [ran, malformed, '        return reply(400, "bad body")']
+      - [ran, "", '    try:']
+      - [ran, "", '        product = await catalog.get_product(req.sku)']
+      - [ran, "", '    except grpc.RpcError as e:']
+      - [ran, "", '        if e.code() == StatusCode.NOT_FOUND:']
+      - [ran, unknown, '            return reply(422, "unknown product")']
+      - [ran, down, '        return reply(503, "catalog is down")']
+      - [ran, "", '    order = Order(req, product)']
+      - [ran, "", '    try:']
+      - [ran, "", '        await db.insert(order)']
+      - [gap, "", '    except asyncpg.PostgresError:']
+      - [gap, gap, '        return reply(500, "could not store")']
+      - [blind, blind, '    await events.publish("orders.created", order)']
+      - [ran, placed, '    return reply(201, order)']
+
+  - id: nodejs
+    name: Node.js
+    file: src/orders.js
+    fn: createOrder
+    keywords: async|function|let|const|try|catch|if|return|await
+    lines:
+      - ["", "", 'async function createOrder(req, res) {']
+      - ["", "", '  let body, product;']
+      - [ran, "", '  try { body = JSON.parse(req.body); }']
+      - [ran, malformed, '  catch { return reply(res, 400, "bad body"); }']
+      - [ran, "", '  try { product = await catalog.getProduct(body.sku); }']
+      - [ran, "", '  catch (err) {']
+      - [ran, "", '    if (err.code === NOT_FOUND)']
+      - [ran, unknown, '      return reply(res, 422, "unknown product");']
+      - [ran, down, '    return reply(res, 503, "catalog is down");']
+      - ["", "", '  }']
+      - [ran, "", '  const order = newOrder(body, product);']
+      - [ran, "", '  try { await db.insert(order); }']
+      - [gap, gap, '  catch { return reply(res, 500, "could not store"); }']
+      - [blind, blind, '  await events.publish("orders.created", order);']
+      - [ran, placed, '  return reply(res, 201, order);']
+      - ["", "", '}']
