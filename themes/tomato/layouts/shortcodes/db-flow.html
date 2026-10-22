@@ -19,7 +19,7 @@
     <!-- the database -->
     <rect class="box" x="40" y="70" width="460" height="240" rx="10" />
     <text class="title" x="56" y="96">orders-db</text>
-    <text class="muted" x="134" y="96">postgres</text>
+    <text class="muted" x="134" y="96">postgres container · started by tomato</text>
 
     <!-- tables -->
     <g class="tbl t-mig">
@@ -50,11 +50,11 @@
     <g class="side">
       <rect class="box side-box" x="540" y="70" width="220" height="240" rx="10" />
       <circle class="fruit" cx="560" cy="94" r="7" /><rect class="stem" x="557" y="83" width="6" height="5" rx="1.5" />
-      <text class="title" x="574" y="99" data-f="side-title">the app starts</text>
-      <text class="side-t" x="556" y="130" data-f="l1">runs its migrations:</text>
-      <text class="side-t" x="556" y="150" data-f="l2">creates the tables,</text>
-      <text class="side-t" x="556" y="170" data-f="l3">records each version,</text>
-      <text class="side-t" x="556" y="190" data-f="l4">writes reference data.</text>
+      <text class="title" x="574" y="99" data-f="side-title">tomato starts</text>
+      <text class="side-t" x="556" y="130" data-f="l1">Postgres, then your app,</text>
+      <text class="side-t" x="556" y="150" data-f="l2">which migrates it:</text>
+      <text class="side-t" x="556" y="170" data-f="l3">tables, versions,</text>
+      <text class="side-t" x="556" y="190" data-f="l4">reference data.</text>
       <text class="side-c" x="556" y="230" data-f="l5">once per run</text>
     </g>
   </svg>
@@ -68,7 +68,7 @@
       <button type="button" data-go="3">4 · Next scenario</button>
     </div>
     <div class="flow-text" aria-live="polite">
-      <p data-for="0"><strong>Once per run</strong>, tomato starts Postgres and then your service, which runs its migrations as it does in production: tables, the migration history, reference data.</p>
+      <p data-for="0"><strong>Once per run</strong>, tomato starts the Postgres container and then your service, which runs its migrations as it does in production: tables, the migration history, reference data.</p>
       <p data-for="1"><strong>A scenario</strong> writes what it likes: through your service, or seeded directly in a <code>Background</code>.</p>
       <p data-for="2"><strong>Before the next scenario</strong> tomato empties every table in one <code>TRUNCATE … RESTART IDENTITY</code>, except the migration history (tomato knows the common tools' tables) and the tables you <code>exclude</code>.</p>
       <p data-for="3"><strong>The next scenario</strong> starts from exactly the state the first one did, and builds what it needs. No scenario can pass or fail because of another.</p>
@@ -84,10 +84,10 @@
 (function () {
   var root = document.getElementById("{{ $id }}");
   var side = [
-    { "side-title": "the app starts", l1: "runs its migrations:", l2: "creates the tables,", l3: "records each version,", l4: "writes reference data.", l5: "once per run" },
-    { "side-title": "scenario 1", l1: "POST /orders  ada · DE", l2: "POST /orders  bob · NL", l3: "", l4: "orders has 2 rows ✓", l5: "ids 1 and 2" },
+    { "side-title": "tomato starts", l1: "Postgres, then your app,", l2: "which migrates it:", l3: "tables, versions,", l4: "reference data.", l5: "once per run" },
+    { "side-title": "tomato: scenario 1", l1: "orders-client posts", l2: "  ada · DE, bob · NL", l3: "orders-db checks:", l4: "  orders has 2 rows ✓", l5: "ids 1 and 2" },
     { "side-title": "tomato resets", l1: "TRUNCATE orders", l2: "  RESTART IDENTITY CASCADE", l3: "keeps schema_migrations", l4: "keeps countries (exclude)", l5: "before every scenario" },
-    { "side-title": "scenario 2", l1: "Background:", l2: "  orders has values: 42 …", l3: "GET /orders/42", l4: "country is ID ✓", l5: "same start as scenario 1" }
+    { "side-title": "tomato: scenario 2", l1: "orders-db seeds 42 …", l2: "orders-client gets", l3: "  /orders/42", l4: "  country is ID ✓", l5: "same start as scenario 1" }
   ];
   var step = 0, timer = null;
   function show(n) {

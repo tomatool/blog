@@ -3,7 +3,7 @@
 {{ $id := printf "people-%d" .Ordinal }}
 <figure class="explainer flow people-flow" id="{{ $id }}" data-step="0">
   <div class="flow-canvas">
-  <svg viewBox="0 0 780 330" role="img" aria-labelledby="{{ $id }}-title">
+  <svg viewBox="0 0 780 420" role="img" aria-labelledby="{{ $id }}-title">
     <title id="{{ $id }}-title">Two browser resources share one Chromium but each has its own cookies and storage; Ada adds Basil, the app stores it, and Bob's page shows it.</title>
     <defs>
       <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -44,6 +44,19 @@
       <circle r="4" class="packet"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#{{ $id }}-db" /></animateMotion></circle></g>
     <g class="pk p-down"><circle r="4" class="packet check"><animateMotion dur="1.2s" repeatCount="indefinite"><mpath href="#{{ $id }}-down" /></animateMotion></circle></g>
     <text class="reset-x" x="290" y="190" text-anchor="middle">✕ both contexts closed</text>
+
+    <!-- tomato: drives both people, checks what Bob sees -->
+    <path class="t-wire tw-ada" d="M161 350 V292" marker-end="url(#{{ $id }}-arrow)" />
+    <path class="t-wire tw-bob" d="M419 350 V292" marker-end="url(#{{ $id }}-arrow)" />
+    <path class="t-wire tw-db" d="M690 350 V292" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="t-wire-t tw-ada" x="168" y="326">DevTools</text>
+    <text class="t-wire-t tw-bob" x="426" y="326">DevTools</text>
+    <text class="t-wire-t tw-db" x="697" y="326">SQL</text>
+    <rect class="box tomato-box" x="20" y="350" width="740" height="56" rx="10" />
+    <circle class="fruit" cx="42" cy="372" r="7" /><rect class="stem" x="39" y="361" width="6" height="5" rx="1.5" />
+    <text class="title" x="56" y="377">tomato run</text>
+    <text class="muted" x="56" y="395">one scenario, two resources</text>
+    <text class="t-step" x="270" y="384" data-f="tstep"></text>
   </svg>
   </div>
 
@@ -55,7 +68,7 @@
       <button type="button" data-go="3">4 · Reset</button>
     </div>
     <div class="flow-text" aria-live="polite">
-      <p data-for="0"><strong>Two resources, one Chromium.</strong> <code>ada-browser</code> and <code>bob-browser</code> each get their own browser context: their own cookies, storage and tabs, like two people on two laptops. Both are signed in, each with their own session.</p>
+      <p data-for="0"><strong>Two resources, one Chromium.</strong> tomato drives both from the same scenario. <code>ada-browser</code> and <code>bob-browser</code> each get their own browser context: their own cookies, storage and tabs, like two people on two laptops. Both are signed in, each with their own session.</p>
       <p data-for="1"><strong>Ada adds Basil</strong> on her page. Her click reaches the app, which stores the item.</p>
       <p data-for="2"><strong><code>"bob-browser" sees "Basil" within "3s"</code></strong>: Bob's page picks it up through the app, by polling, a websocket or anything else, and the step passes the moment it shows. Collaboration takes no special steps.</p>
       <p data-for="3"><strong>Before the next scenario</strong> both contexts are closed and the tables emptied. Nobody stays signed in.</p>
@@ -71,6 +84,12 @@
 (function () {
   var root = document.getElementById("{{ $id }}");
   var LAST = 3, step = 0, timer = null, typing = null;
+  var TSTEP = [
+    'signs in "ada-browser" and "bob-browser"',
+    'When "ada-browser" clicks "Add"',
+    'Then "bob-browser" sees "Basil" within "3s"',
+    'resets: closes both contexts, empties shop-db'
+  ];
   var typed = root.querySelector('[data-f="typed"]'), items = root.querySelector('[data-f="items"]');
   function show(n, animate) {
     step = Math.max(0, Math.min(LAST, n));
@@ -79,6 +98,7 @@
     root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
     root.querySelectorAll("figcaption [data-for]").forEach(function (el) { el.hidden = +el.dataset.for !== step; });
     items.textContent = step === 1 || step === 2 ? "items: Basil" : "items: none";
+    root.querySelector('[data-f="tstep"]').textContent = TSTEP[step];
     if (step === 1 && animate) {
       var i = 0; typed.textContent = "";
       typing = setInterval(function () { typed.textContent = "Basil".slice(0, ++i); if (i >= 5) { clearInterval(typing); typing = null; } }, 90);

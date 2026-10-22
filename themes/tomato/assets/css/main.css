@@ -761,12 +761,20 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .netlab .pk-mark { font-size: 11.5px; font-weight: 600; animation: pk-up 0.9s ease-out forwards; }
 .netlab .pk-mark.bad { fill: var(--fail); }
 @keyframes pk-up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
-.netlab .bypass { fill: none; stroke: var(--then); stroke-width: 1.6; stroke-dasharray: 6 4; animation: bypass 1.2s linear infinite; }
-@keyframes bypass { to { stroke-dashoffset: -20; } }
-.netlab .bypass-tag { fill: var(--bg-1); stroke: var(--then); }
-.netlab .bypass-text { fill: var(--then); font-size: 11.5px; }
 .netlab .faults { margin-top: 0; }
-@media (prefers-reduced-motion: reduce) { .netlab .bypass, .netlab .pk-mark { animation: none; } }
+
+.netlab .t-link { fill: none; stroke-width: 1.6; }
+.netlab .t-req { stroke: var(--when); stroke-dasharray: 6 4; animation: t-flow 1s linear infinite; }
+.netlab .t-fault { stroke: var(--fail); }
+.netlab[data-fault="healthy"] .t-fault { stroke: var(--line-strong); }
+.netlab .t-check { stroke: var(--then); stroke-dasharray: 6 4; animation: t-flow 1.2s linear infinite; }
+@keyframes t-flow { to { stroke-dashoffset: 20; } }
+.netlab .t-tag { fill: var(--bg-1); stroke: var(--line-strong); }
+.netlab .t-tag-t { font-size: 11px; }
+.netlab .t-tag-t.req { fill: var(--when); } .netlab .t-tag-t.fault { fill: var(--fail); } .netlab .t-tag-t.check { fill: var(--then); }
+.netlab[data-fault="healthy"] .t-tag-t.fault { fill: var(--fg-3); }
+.netlab .t-step2 { fill: var(--fg-3); font-size: 11px; }
+@media (prefers-reduced-motion: reduce) { .netlab .t-link { animation: none; } }
 
 /* the timeout that lied (shortcode network-timeout) */
 .nettime .life { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 3 4; fill: none; }
@@ -796,3 +804,25 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .nettime .direct { fill: none; stroke: var(--then); stroke-width: 1.6; stroke-dasharray: 6 4; }
 .nettime .direct-t { fill: var(--then); font-size: 11.5px; font-weight: 600; }
 .nettime .direct-sub { fill: var(--fg-2); font-size: 11px; }
+
+/* where tomato is, in every diagram */
+.flow .tomato-zone { fill: color-mix(in oklch, var(--fail) 4%, transparent); stroke: var(--fail); stroke-width: 1.2; stroke-dasharray: 6 5; opacity: 0.8; }
+.flow .tomato-zone-t { fill: var(--fail); font-size: 12.5px; font-weight: 600; }
+.flow .tomato-zone-sub { fill: var(--fg-3); font-size: 11px; }
+.flow .tomato-box { stroke: var(--fail); fill: color-mix(in oklch, var(--fail) 6%, var(--bg-2)); }
+.flow .t-step { fill: var(--when); font-size: 12px; }
+.people-flow .t-wire { fill: none; stroke: var(--fail); stroke-width: 1.5; opacity: 0.15; transition: opacity 0.3s; }
+.people-flow .t-wire-t { fill: var(--fg-3); font-size: 10.5px; opacity: 0; transition: opacity 0.3s; }
+.people-flow[data-step="0"] :is(.tw-ada, .tw-bob),
+.people-flow[data-step="1"] .tw-ada,
+.people-flow[data-step="2"] .tw-bob,
+.people-flow[data-step="3"] :is(.tw-ada, .tw-bob, .tw-db) { opacity: 1; }
+.people-flow[data-step="2"] .t-step { fill: var(--then); }
+.people-flow[data-step="3"] .t-step { fill: var(--fail); }
+@media (prefers-reduced-motion: reduce) { .netlab .pk-mark { animation: none; } }
+.nettime .tomato-head { stroke: var(--fail); fill: color-mix(in oklch, var(--fail) 6%, var(--bg-2)); }
+.nettime .tomato-head-t { fill: var(--fail); }
+.nettime .msg.ctl { stroke: var(--fail); stroke-dasharray: 5 4; }
+.nettime .msg.ctl.heal { stroke: var(--pass); }
+.nettime .ctl-t { fill: var(--fg-2); font-size: 11px; }
+.db-flow .side-t { white-space: pre; }

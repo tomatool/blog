@@ -3,8 +3,8 @@
 {{ $id := printf "netlab-%d" .Ordinal }}
 <figure class="explainer flow netlab" id="{{ $id }}" data-fault="healthy">
   <div class="flow-canvas">
-  <svg viewBox="0 0 780 320" role="img" aria-labelledby="{{ $id }}-title">
-    <title id="{{ $id }}-title">The app's requests to Postgres pass through tomato's proxy, which can delay, swallow, reset, refuse or drop them; tomato's own database resource connects to Postgres directly.</title>
+  <svg viewBox="0 0 780 400" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">tomato sends requests to the app and applies a fault to its proxy between the app and Postgres, which can delay, swallow, reset, refuse or drop the app's queries; tomato then checks Postgres directly, past the proxy.</title>
 
     <!-- the app -->
     <rect class="box app" x="20" y="34" width="176" height="196" rx="10" />
@@ -39,10 +39,19 @@
     <path class="lane" d="M586 180 H196" />
     <g class="packets-layer"></g>
 
-    <!-- tomato's own resource -->
-    <path class="bypass" d="M108 230 V286 H673 V230" />
-    <rect class="bypass-tag" x="236" y="274" width="312" height="24" rx="12" />
-    <text class="bypass-text" x="392" y="290" text-anchor="middle">"orders-db" (tomato) connects directly</text>
+    <!-- tomato: sends the requests, applies the fault, checks the table directly -->
+    <path class="t-link t-req" d="M108 318 V230" />
+    <path class="t-link t-fault" d="M390 318 V230" />
+    <path class="t-link t-check" d="M673 318 V230" />
+    <rect class="t-tag" x="40" y="258" width="136" height="22" rx="11" /><text class="t-tag-t req" x="108" y="273" text-anchor="middle">orders-client · HTTP</text>
+    <rect class="t-tag" x="322" y="258" width="136" height="22" rx="11" /><text class="t-tag-t fault" x="390" y="273" text-anchor="middle">applies the fault</text>
+    <rect class="t-tag" x="578" y="258" width="190" height="22" rx="11" /><text class="t-tag-t check" x="673" y="273" text-anchor="middle">orders-db · past the proxy</text>
+    <rect class="box tomato-box" x="20" y="318" width="740" height="64" rx="10" />
+    <circle class="fruit" cx="42" cy="342" r="7" /><rect class="stem" x="39" y="331" width="6" height="5" rx="1.5" />
+    <text class="title" x="56" y="347">tomato run</text>
+    <text class="muted" x="56" y="365">the scenario's steps</text>
+    <text class="t-step" x="236" y="347" data-f="tstep"></text>
+    <text class="t-step2" x="236" y="367">then checks the response, and orders-db, directly</text>
   </svg>
   </div>
 
@@ -78,15 +87,15 @@
   var layer = root.querySelector(".packets-layer");
   var f = function (k) { return root.querySelector('[data-f="' + k + '"]'); };
   var FAULTS = {
-    healthy: ["healthy", "passes everything"],
-    latency: ["+300ms ± 100ms", "every reply, late"],
-    bandwidth: ["64 KB/s", "replies trickle"],
-    hang: ["stops responding", "queries in, nothing out"],
-    reset: ["resets", "RST on first byte"],
-    refuse: ["refuses", "nothing gets in"],
-    flap: ["flaps", "down 2s, up 2s"],
-    failnext: ["fails the next 2", "then passes"],
-    loss: ["loses 30%", "chunks of replies dropped"]
+    healthy: ["healthy", "passes everything", "is healthy"],
+    latency: ["+300ms ± 100ms", "every reply, late", 'adds latency "300ms" with jitter "100ms"'],
+    bandwidth: ["64 KB/s", "replies trickle", 'limits bandwidth to "64KB/s"'],
+    hang: ["stops responding", "queries in, nothing out", "stops responding"],
+    reset: ["resets", "RST on first byte", 'resets connections for "2s"'],
+    refuse: ["refuses", "nothing gets in", "refuses connections"],
+    flap: ["flaps", "down 2s, up 2s", 'flaps every "2s" for "10s"'],
+    failnext: ["fails the next 2", "then passes", 'fails the next "2" connections'],
+    loss: ["loses 30%", "chunks of replies dropped", 'loses "30%" of the data']
   };
   var ORDER = ["healthy", "latency", "hang", "reset", "refuse", "flap", "failnext", "loss", "bandwidth"];
   var X_APP = 196, X_IN = 300, X_OUT = 480, X_DB = 586, Y_Q = 110, Y_R = 180, SPEED = 0.32; // px per ms
@@ -172,6 +181,7 @@
     if (k === "healthy") { conns = 1; rows = 0; f("conns").textContent = conns; f("rows").textContent = rows; }
     root.dataset.fault = k;
     f("fault").textContent = FAULTS[k][0]; f("faultSub").textContent = FAULTS[k][1];
+    f("tstep").textContent = 'Given "postgres-network" ' + FAULTS[k][2];
     result(k === "hang" ? "waiting…" : "—", k === "hang" ? "slow" : "");
     root.querySelectorAll("[data-k]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.k === k); });
     root.querySelectorAll(".netlab-text [data-for]").forEach(function (p) { p.hidden = p.dataset.for !== k; });

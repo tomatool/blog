@@ -13,7 +13,7 @@
 
     <!-- lanes -->
     <g class="heads">
-      <rect class="box" x="40" y="14" width="140" height="34" rx="8" /><text class="title" x="110" y="36" text-anchor="middle">orders-client</text>
+      <rect class="box tomato-head" x="40" y="14" width="140" height="34" rx="8" /><circle class="fruit" cx="72" cy="31" r="6" /><rect class="stem" x="69.5" y="21.5" width="5" height="4" rx="1.5" /><text class="title tomato-head-t" x="118" y="36" text-anchor="middle">tomato</text>
       <rect class="box" x="230" y="14" width="120" height="34" rx="8" /><text class="title" x="290" y="36" text-anchor="middle">your app</text>
       <rect class="box proxy-h" x="400" y="14" width="170" height="34" rx="8" /><text class="title" x="485" y="36" text-anchor="middle">postgres-network</text>
       <rect class="box" x="620" y="14" width="130" height="34" rx="8" /><text class="title" x="685" y="36" text-anchor="middle">postgres</text>
@@ -21,11 +21,11 @@
     <path class="life" d="M110 48 V346 M290 48 V346 M485 48 V346 M685 48 V346" />
 
     <!-- 1 · the fault -->
-    <g class="s s0"><rect class="fault-band" x="400" y="62" width="170" height="22" rx="4" /><text class="fault-t" x="485" y="77" text-anchor="middle">stops responding</text></g>
+    <g class="s s0"><path class="msg ctl" d="M110 73 H396" marker-end="url(#{{ $id }}-arrow)" /><text class="ctl-t" x="250" y="68" text-anchor="middle">applies the fault</text><rect class="fault-band" x="400" y="62" width="170" height="22" rx="4" /><text class="fault-t" x="485" y="77" text-anchor="middle">stops responding</text></g>
 
     <!-- 2 · the order goes in -->
     <g class="s s1">
-      <path class="msg" d="M110 104 H286" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="198" y="98" text-anchor="middle">POST /orders  ord-1</text>
+      <path class="msg" d="M110 104 H286" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="198" y="98" text-anchor="middle">orders-client: POST ord-1</text>
       <path class="msg" d="M290 128 H681" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="388" y="122" text-anchor="middle">INSERT ord-1</text>
       <rect class="commit" x="626" y="138" width="118" height="22" rx="4" /><text class="commit-t" x="685" y="153" text-anchor="middle">committed ✓</text>
     </g>
@@ -47,8 +47,8 @@
 
     <!-- 5 · the retry -->
     <g class="s s4">
-      <rect class="heal-band" x="400" y="270" width="170" height="20" rx="4" /><text class="heal-t" x="485" y="284" text-anchor="middle">is healthy</text>
-      <path class="msg" d="M110 306 H286" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="198" y="300" text-anchor="middle">retry: POST ord-1</text>
+      <path class="msg ctl heal" d="M110 280 H396" marker-end="url(#{{ $id }}-arrow)" /><text class="ctl-t" x="250" y="276" text-anchor="middle">heals it</text><rect class="heal-band" x="400" y="270" width="170" height="20" rx="4" /><text class="heal-t" x="485" y="284" text-anchor="middle">is healthy</text>
+      <path class="msg" d="M110 306 H286" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="198" y="300" text-anchor="middle">retries: POST ord-1</text>
       <path class="msg" d="M290 318 H681" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t" x="560" y="312" text-anchor="middle">INSERT … ON CONFLICT DO NOTHING</text>
       <path class="msg back good" d="M286 336 H114" marker-end="url(#{{ $id }}-arrow)" /><text class="msg-t good" x="198" y="350" text-anchor="middle">201 · still 1 row</text>
     </g>
@@ -64,11 +64,11 @@
       <button type="button" data-go="4">5 · Retry</button>
     </div>
     <div class="flow-text" aria-live="polite">
-      <p data-for="0"><strong><code>"postgres-network" stops responding</code></strong>. Connections stay open and queries still go through. Only the replies stop.</p>
-      <p data-for="1"><strong>The order goes in.</strong> The client posts <code>ord-1</code>, the app runs its INSERT, and Postgres commits it. Nothing about that was faulty.</p>
+      <p data-for="0"><strong>tomato applies the fault</strong>: <code>"postgres-network" stops responding</code>. Connections stay open and queries still go through. Only the replies stop.</p>
+      <p data-for="1"><strong>The order goes in.</strong> tomato's <code>orders-client</code> posts <code>ord-1</code>, the app runs its INSERT, and Postgres commits it. Nothing about that was faulty.</p>
       <p data-for="2"><strong>The reply never comes back.</strong> The app's query timeout fires after a second, and it answers <code>503 try again</code>. That's the right call: it doesn't know what happened.</p>
       <p data-for="3"><strong>Postgres knows.</strong> tomato's <code>orders-db</code> connects to the container directly, past the proxy, and finds the order. A 503 doesn't mean nothing happened.</p>
-      <p data-for="4"><strong>So the client does what the 503 asked</strong> and tries again with the same order id. Because the insert ignores an id it already has, the retry gets <code>201</code> and there's still one row. Without that, every retry fails on the duplicate key, for an order that exists.</p>
+      <p data-for="4"><strong>tomato heals the network, then does what the 503 asked</strong>: <code>orders-client</code> tries again with the same order id. Because the insert ignores an id it already has, the retry gets <code>201</code> and there's still one row. Without that, every retry fails on the duplicate key, for an order that exists.</p>
     </div>
     <div class="flow-nav">
       <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
