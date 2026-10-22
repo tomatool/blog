@@ -826,3 +826,34 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .nettime .msg.ctl.heal { stroke: var(--pass); }
 .nettime .ctl-t { fill: var(--fg-2); font-size: 11px; }
 .db-flow .side-t { white-space: pre; }
+
+/* the redis preset flow (shortcode redis-flow) */
+.rds-flow .env-text { font-size: 10.5px; }
+.rds-flow .env-val { fill: var(--arg); }
+.rds-flow .r-line { fill: var(--fg-2); font-size: 11.5px; }
+.rds-flow .seq-box { fill: var(--bg-1); stroke: var(--line); }
+.rds-flow .r-num { fill: var(--fg-3); font-size: 12px; }
+.rds-flow .r-act { fill: var(--fg-1); font-size: 12px; }
+.rds-flow .r-v { font-size: 12px; transition: fill 0.3s; }
+.rds-flow .r-v.ok { fill: var(--pass); } .rds-flow .r-v.no { fill: var(--fail); } .rds-flow .r-v.warn { fill: var(--warn); }
+.rds-flow .r-pk { opacity: 0; transition: opacity 0.3s; }
+.rds-flow .packet.bad { fill: var(--warn); } .rds-flow .packet.check { fill: var(--then); }
+.rds-flow :is(.r-tomato, .w-http, .w-check) { opacity: 0.12; transition: opacity 0.4s; }
+.rds-flow .r-app { transition: opacity 0.4s; }
+.rds-flow .box { transition: stroke 0.3s, fill 0.3s; }
+/* 3 to 5 · tomato runs it: the stand-in lights up */
+.rds-flow:is([data-step="2"], [data-step="3"], [data-step="4"]) .r-tomato { opacity: 1; }
+.rds-flow:is([data-step="2"], [data-step="3"], [data-step="4"]) .redis-box { stroke: var(--given); fill: color-mix(in oklch, var(--given) 9%, var(--bg-2)); }
+.rds-flow[data-step="2"] .r-app { opacity: 0.35; }
+.rds-flow[data-step="2"] .w-check { opacity: 0.3; }
+/* 1 and 4 · the client gets through; 2 · it doesn't */
+.rds-flow:is([data-step="0"], [data-step="3"]) .r-pk-ok { opacity: 1; }
+.rds-flow:is([data-step="0"], [data-step="3"]) path.w-redis { stroke: var(--when); }
+.rds-flow[data-step="1"] .r-pk-bad { opacity: 1; }
+.rds-flow[data-step="1"] path.w-redis { stroke: var(--fail); }
+.rds-flow[data-step="1"] .redis-box { stroke: var(--fail); }
+/* 5 · a scenario */
+.rds-flow[data-step="4"] :is(.w-http, .w-check) { opacity: 1; }
+.rds-flow[data-step="4"] path.w-http, .rds-flow[data-step="4"] path.w-redis { stroke: var(--when); }
+.rds-flow[data-step="4"] path.w-check { stroke: var(--then); }
+.rds-flow[data-step="4"] .r-pk-scenario { opacity: 1; }

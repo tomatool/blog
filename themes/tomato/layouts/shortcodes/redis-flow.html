@@ -1,0 +1,200 @@
+{{/* A step-through diagram of the redis preset with cluster and tls: what a
+     cluster client does against ElastiCache, why a node left alone sends it to
+     :6379, what tomato does while it starts the preset, and a scenario. */}}
+{{ $id := printf "rds-%d" .Ordinal }}
+<figure class="explainer flow rds-flow" id="{{ $id }}" data-step="0">
+  <div class="flow-canvas">
+  <svg viewBox="0 0 780 352" role="img" aria-labelledby="{{ $id }}-title">
+    <title id="{{ $id }}-title">A cluster client over TLS verifies the server's certificate, asks CLUSTER SLOTS where the slots live, and dials that address. A Redis node left alone announces an empty host, so the client dials :6379 and is refused. The redis preset picks the host port before the start, announces it, makes a CA for the run and adds every slot; tomato then drives the service and checks its keys over the same cluster and TLS.</title>
+    <defs>
+      <marker id="{{ $id }}-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 10 5 0 10z" class="arrowhead" />
+      </marker>
+    </defs>
+
+    <!-- tomato -->
+    <g class="part r-tomato">
+      <rect class="box tomato-box" x="20" y="30" width="210" height="150" rx="10" />
+      <circle class="fruit" cx="42" cy="54" r="7" /><rect class="stem" x="39" y="43" width="6" height="5" rx="1.5" />
+      <text class="title" x="56" y="59">tomato run</text>
+      <text class="t-step" x="34" y="96" data-field="t1"></text>
+      <text class="t-step" x="34" y="122" data-field="t2"></text>
+      <text class="t-step" x="34" y="148" data-field="t3"></text>
+    </g>
+
+    <!-- the service -->
+    <g class="part r-app">
+      <rect class="box service-box" x="270" y="30" width="230" height="150" rx="10" />
+      <text class="title" x="286" y="55">coupons</text>
+      <text class="muted" x="352" y="55">your service</text>
+      <text class="badge-text" x="286" y="78" data-field="badge"></text>
+      <rect class="env-box" x="280" y="92" width="210" height="78" rx="6" />
+      <text class="env-text" x="290" y="109">REDIS_URL=</text>
+      <text class="env-text env-val" x="290" y="124" data-field="url"></text>
+      <text class="env-text" x="290" y="144">SSL_CERT_FILE=</text>
+      <text class="env-text env-val" x="290" y="159" data-field="ca"></text>
+    </g>
+
+    <!-- the server -->
+    <g class="part r-redis">
+      <rect class="box redis-box" x="540" y="30" width="220" height="150" rx="10" />
+      <text class="title" x="556" y="55" data-field="rTitle"></text>
+      <text class="muted" x="556" y="73" data-field="rSub"></text>
+      <text class="r-line" x="556" y="104" data-field="r1"></text>
+      <text class="r-line" x="556" y="128" data-field="r2"></text>
+      <text class="r-line" x="556" y="152" data-field="r3"></text>
+    </g>
+
+    <!-- wires -->
+    <path id="{{ $id }}-http" class="wire w-http" d="M230 90 H270" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label w-http" x="234" y="82">HTTP</text>
+    <path id="{{ $id }}-redis" class="wire w-redis" d="M500 90 H540" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label w-redis" x="506" y="82" data-field="proto"></text>
+    <path id="{{ $id }}-check" class="wire dashed w-check" d="M125 180 V204 H650 V180" marker-end="url(#{{ $id }}-arrow)" />
+    <text class="wire-label w-check" x="236" y="220">coupons-cache, tomato's redis resource: the same cluster, TLS and CA</text>
+
+    <!-- what the client sees -->
+    <rect class="seq-box" x="20" y="232" width="740" height="106" rx="10" />
+    <text class="title" x="36" y="256" data-field="seqTitle"></text>
+    <text class="r-num" x="36" y="282">1</text><text class="r-act" x="56" y="282" data-field="a1"></text><text class="r-v" x="340" y="282" data-field="v1"></text>
+    <text class="r-num" x="36" y="304">2</text><text class="r-act" x="56" y="304" data-field="a2"></text><text class="r-v" x="340" y="304" data-field="v2"></text>
+    <text class="r-num" x="36" y="326">3</text><text class="r-act" x="56" y="326" data-field="a3"></text><text class="r-v" x="340" y="326" data-field="v3"></text>
+
+    <g class="r-pk r-pk-ok">
+      <circle r="4" class="packet"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-redis" /></animateMotion></circle>
+    </g>
+    <g class="r-pk r-pk-bad">
+      <circle r="4" class="packet bad"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#{{ $id }}-redis" /></animateMotion></circle>
+    </g>
+    <g class="r-pk r-pk-scenario">
+      <circle r="4" class="packet"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#{{ $id }}-http" /></animateMotion></circle>
+      <circle r="4" class="packet"><animateMotion dur="1.8s" begin="0.5s" repeatCount="indefinite"><mpath href="#{{ $id }}-redis" /></animateMotion></circle>
+      <circle r="4" class="packet check"><animateMotion dur="2.6s" begin="1s" repeatCount="indefinite"><mpath href="#{{ $id }}-check" /></animateMotion></circle>
+    </g>
+  </svg>
+  </div>
+
+  <figcaption>
+    <div class="flow-steps" role="tablist">
+      <button type="button" data-go="0">1 · On ElastiCache</button>
+      <button type="button" data-go="1">2 · Left alone</button>
+      <button type="button" data-go="2">3 · The preset</button>
+      <button type="button" data-go="3">4 · The client</button>
+      <button type="button" data-go="4">5 · A scenario</button>
+    </div>
+    <div class="flow-text" aria-live="polite">
+      <p data-for="0"><strong>On ElastiCache</strong> the service's cluster client does three things: a TLS handshake against a certificate the system trusts, <code>CLUSTER SLOTS</code> to learn which shard owns which slot, and a connection to the owner of each key's slot.</p>
+      <p data-for="1"><strong>Left alone</strong>, a Redis started with <code>--cluster-enabled yes</code> owns no slots until someone adds them, speaks plain TCP, and announces nothing: <code>CLUSTER SLOTS</code> answers with an empty host and the port inside the container. go-redis dials <code>:6379</code>, and the connection is refused.</p>
+      <p data-for="2"><strong>The preset</strong> does what has to happen while the run starts. tomato picks a host port and maps it to 6379, makes a CA and a certificate for <code>localhost</code> and <code>127.0.0.1</code>, starts the node announcing that port, TLS only, and gives it every slot.</p>
+      <p data-for="3"><strong>The client connects</strong> as it does in production. <code>SSL_CERT_FILE</code> points at the run's CA, so the handshake verifies, and <code>CLUSTER SLOTS</code> names the host port tomato mapped, so the client can dial it.</p>
+      <p data-for="4"><strong>A scenario</strong> calls the service over HTTP and checks the key through <code>coupons-cache</code>, tomato's redis resource, which connects over the same cluster, TLS and CA. Before the next scenario, tomato flushes the node.</p>
+    </div>
+    <div class="flow-nav">
+      <button type="button" class="ghost" data-prev aria-label="Previous step">←</button>
+      <button type="button" class="ghost play" data-play>▶ Play</button>
+      <button type="button" class="ghost" data-next aria-label="Next step">→</button>
+    </div>
+  </figcaption>
+</figure>
+<script>
+(function () {
+  var root = document.getElementById("{{ $id }}");
+  var LAST = 4;
+  var preset = {
+    badge: "NewClusterClient · TLS", proto: "TLS",
+    url: "localhost:40001", ca: "…/tomato/ca-3ebf6c489195.pem",
+    rTitle: "redis preset", rSub: "cluster: true · tls: true",
+    r1: "owns slots 0–16383", r2: "announces 127.0.0.1:40001", r3: "cert: localhost, 127.0.0.1"
+  };
+  var steps = [
+    {
+      t1: "", t2: "", t3: "",
+      badge: "NewClusterClient · TLS", proto: "TLS",
+      url: "clustercfg.coupons…:6379", ca: "(unset: the system's roots)",
+      rTitle: "ElastiCache", rSub: "cluster mode · in-transit TLS",
+      r1: "shards own the 16384 slots", r2: "each announces its endpoint", r3: "Amazon's certificate",
+      seqTitle: "what the cluster client does",
+      a1: "TLS handshake", v1: ["ok", "✓ a certificate the system trusts"],
+      a2: "CLUSTER SLOTS", v2: ["ok", "→ each shard's endpoint"],
+      a3: "dial the slot's owner", v3: ["ok", "✓ SET NX redeemed:A1"]
+    },
+    {
+      t1: "", t2: "", t3: "",
+      badge: "NewClusterClient · TLS off", proto: "TCP",
+      url: "localhost:55012", ca: "(unset)",
+      rTitle: "redis:7.4", rSub: "--cluster-enabled yes",
+      r1: "slots added by hand", r2: "announces nothing", r3: "plain TCP, no certificate",
+      seqTitle: "what the cluster client does",
+      a1: "connect localhost:55012", v1: ["warn", "✓ but only with TLS switched off"],
+      a2: "CLUSTER SLOTS", v2: ["warn", "→ 0–16383 at \"\":6379, the port inside"],
+      a3: "dial :6379", v3: ["no", "✗ connect: connection refused"]
+    },
+    Object.assign({}, preset, {
+      t1: "picks host port 40001", t2: "makes a CA for the run", t3: "starts it, adds slots",
+      seqTitle: "ready when",
+      a1: "redis-server answers", v1: ["ok", "✓ over TLS only: plain clients refused"],
+      a2: "CLUSTER ADDSLOTSRANGE 0 16383", v2: ["ok", "✓ every slot on this node"],
+      a3: "cluster_state:ok", v3: ["ok", "✓ tomato starts the service"]
+    }),
+    Object.assign({}, preset, {
+      t1: "starts ./coupons", t2: "REDIS_URL, SSL_CERT_FILE", t3: "waits for GET /health",
+      seqTitle: "what the cluster client does",
+      a1: "TLS handshake", v1: ["ok", "✓ signed by the run's CA"],
+      a2: "CLUSTER SLOTS", v2: ["ok", "→ 0–16383 at 127.0.0.1:40001"],
+      a3: "dial 127.0.0.1:40001", v3: ["ok", "✓ the host port tomato mapped"]
+    }),
+    Object.assign({}, preset, {
+      t1: "POST /coupons/A1/redeem", t2: "key redeemed:A1 exists", t3: "resets: flushes the node",
+      seqTitle: "a scenario",
+      a1: "the service: SET NX redeemed:A1", v1: ["ok", "✓ 201, and 409 for a second try"],
+      a2: "coupons-cache: EXISTS redeemed:A1", v2: ["ok", "✓ over the same cluster, TLS and CA"],
+      a3: "before the next scenario", v3: ["ok", "✓ FLUSHDB on every master"]
+    })
+  ];
+  var step = 0, timer = null;
+
+  function show(n) {
+    step = Math.max(0, Math.min(LAST, n));
+    root.dataset.step = step;
+    var s = steps[step];
+    root.querySelectorAll("[data-field]").forEach(function (el) {
+      var v = s[el.dataset.field];
+      if (Array.isArray(v)) {
+        el.setAttribute("class", "r-v " + v[0]);
+        el.textContent = v[1];
+      } else {
+        el.textContent = v;
+      }
+    });
+    root.querySelectorAll("[data-go]").forEach(function (b) { b.setAttribute("aria-selected", +b.dataset.go === step); });
+    root.querySelectorAll("[data-for]").forEach(function (p) { p.hidden = +p.dataset.for !== step; });
+  }
+  var touched = false; // once the reader drives it, it is theirs
+  function stop() { clearInterval(timer); timer = null; root.querySelector("[data-play]").textContent = "▶ Play"; }
+  function play() {
+    if (timer) return;
+    root.querySelector("[data-play]").textContent = "❚❚ Pause";
+    show(step >= LAST ? 0 : step);
+    timer = setInterval(function () { if (step >= LAST) stop(); else show(step + 1); }, 5200);
+  }
+  function manual() { touched = true; stop(); }
+  root.querySelectorAll("[data-go]").forEach(function (b) { b.addEventListener("click", function () { manual(); show(+b.dataset.go); }); });
+  root.querySelector("[data-prev]").addEventListener("click", function () { manual(); show(step - 1); });
+  root.querySelector("[data-next]").addEventListener("click", function () { manual(); show(step + 1); });
+  root.querySelector("[data-play]").addEventListener("click", function () { touched = true; if (timer) stop(); else play(); });
+
+  // Play on its own the first time it scrolls into view, and pause while it
+  // is out of view; not for readers who asked for less motion.
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if ("IntersectionObserver" in window && !calm && !/redis=/.test(location.search)) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !touched) play();
+        else if (!e.isIntersecting && timer && !touched) stop();
+      });
+    }, { threshold: 0.6 }).observe(root.querySelector("svg"));
+  }
+  var m = location.search.match(/redis=(\d)/);
+  show(m ? +m[1] : 0);
+})();
+</script>
